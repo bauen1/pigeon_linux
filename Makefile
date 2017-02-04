@@ -30,6 +30,9 @@ all: qemu
 .PHONY: clean
 clean:
 	# TODO: Implement
+	rm -rf $(BUILD)/*
+	rm -rf $(SRC)/kernel
+	rm -rf $(SRC)/busybox
 
 .POHNY: qemu
 qemu: $(BUILD)/initrd.img $(BUILD)/bzImage
@@ -54,7 +57,7 @@ $(SRC)/$(LINUX_KERNEL_DOWNLOAD_FILE):
 
 $(SRC)/kernel: $(SRC)/$(LINUX_KERNEL_DOWNLOAD_FILE)
 	mkdir -p $@ && rm -rf $@/*
-	tar -xvf $< -C$@
+	tar -xvf $< -C $@ --strip-components=1
 
 # busybox
 
@@ -69,7 +72,7 @@ $(SRC)/$(BUSYBOX_DOWNLOAD_FILE):
 
 $(SRC)/busybox: $(SRC)/$(BUSYBOX_DOWNLOAD_FILE)
 	mkdir -p $@ && rm -rf $@/*
-	tar -xvf $< -C$@
+	tar -xvf $< -C $@ --strip-components=1
 
 # TODO: glibc (atm we are just "stealing" the one from the host)
 
