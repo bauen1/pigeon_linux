@@ -137,6 +137,24 @@ $(BUILD)/glibc/Makefile: $(SRC)/glibc $(BUILD)/install/linux/include
 		--disable-werror \
 		CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" # FIXME: what does this do ?
 
+$(BUILD)/glibc: $(BUILD)/glibc/Makefile
+	$(MAKE) -C $(BUILD)/glibc -j $(NUM_JOBS)
+
+$(BUILD)/install/glibc:
+	$(MAKE) -C $(BUILD)/glibc DESTDIR=$@ -j $(NUM_JOBS)
+
+$(BUILD)/prepared/glibc:
+	mkdir -p $@ && rm -rf $@/*
+	cp -r $(BUILD)/install/glibc/* $@/
+	mkdir -p $@/usr
+	$(shell cd $@/usr \
+		ln -s ../include include \
+		ln -s ../lib lib )
+	$(shell cd $@/include \
+		ln -s $(BUILD)/install/linux/include/linux linux \
+		ln -s $(BUILD)/install/linux/include/asm asm \
+		ln -s $(BUILD)/install/linux/include/asm-generic asm-generic \
+		ln -s $(BUILD)/install/linux/include/mtd mtd )
 
 ################################################################################
 # initrd.img                                                                   #
@@ -150,7 +168,7 @@ $(BUILD)/initrd: $(BUILD)/busybox/busybox
 	#mkdir -p $@/boot
 	mkdir -p $@/dev
 	#mkdir -p $@/etc
-	mkdir -p $@/lib
+	mkdir -p $@/lib/x86_64-linux-gnu
 	mkdir -p $@/lib64
 	#mkdir -p $@/mnt
 	#mkdir -p $@/root
