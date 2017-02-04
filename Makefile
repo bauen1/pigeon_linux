@@ -1,5 +1,15 @@
 #!/usr/bin/make -f
 
+# BIG LIST OF TODO AND FIXME
+# 1. somewhat similar naming convention (src/kernel vs build/linux)
+#
+#
+#
+#
+#
+
+
+
 ################################################################################
 # Variables                                                                    #
 ################################################################################
@@ -7,18 +17,23 @@
 SRC ?=$(PWD)/src
 BUILD ?=$(PWD)/build
 DOCS ?=$(PWD)/docs
+NUM_JOBS ?=4
 
 ################################################################################
 # Special Targets                                                              #
 ################################################################################
 
 .DEFAULT .PHONY: all
-all: linux_src
+all: qemu
 	# TODO: Implement
 
 .PHONY: clean
 clean:
 	# TODO: Implement
+
+.POHNY: qemu
+qemu: $(BUILD)/initrd.img $(BUILD)/bzImage
+	qemu-system-i386 -initrd $(BUILD)/initrd.img -kernel $(BUILD)/bzImage
 
 ################################################################################
 # Source downloading                                                           #
@@ -63,8 +78,41 @@ $(SRC)/busybox: $(SRC)/$(BUSYBOX_DOWNLOAD_FILE)
 ################################################################################
 
 .PHONY: linux_kernel
-linux_kernel: $(SRC)/kernel
-	##
+linux_kernel: $(BUILD)/linux/arch/x86/boot/bzImage
+	@echo "Finished building the kernel"
+
+$(BUILD)/linux/.config: linux_src
+	mkdir -p $(@D) && rm -rf $(@D)/*
+	$(MAKE) -C $(SRC)/kernel O=$(BUILD)/linux defconfig -j$(NUM_JOBS)
+
+$(BUILD)/linux/vmlinux: $(BUILD)/linux/.config
+	$(MAKE) -C $(SRC)/kernel O=$(BUILD)/linux vmlinux -j$(NUM_JOBS)
+
+$(BUILD)/linux/arch/x86/boot/bzImage: $(BUILD)/linux/vmlinux
+	$(MAKE) -C $(SRC)/kernel O=$(BUILD)/linux bzImage -j$(NUM_JOBS)
+
+$(BUILD)/bzImage: $(BUILD)/linux/arch/x86/boot/bzImage
+	cp $< $@
+
+################################################################################
+# busybox                                                                      #
+################################################################################
+
+busybox: busybox_src
+
+$(BUILD)/busybox/.config: busybox_src
+	mkdir -p $(@D) && rm -rf $(@D)/*
+	$(MAKE) -C $(SRC)/busybox O=$(BUILD)/busybox defconfig -j$(NUM_JOBS)
+
+$(BUILD)/busybox/busybox: $(BUILD)/busybox/.config
+	$(MAKE) -C $(SRC)/busybox O=$(BUILD)/busybox all -j$(NUM_JOBS)
+
+################################################################################
+# initrd.img                                                                   #
+################################################################################
+
+$(BUILD)/initrd.img: $(BUILD)/busybox/busybox
+	# TODO
 
 ################################################################################
 #                                                                              #
