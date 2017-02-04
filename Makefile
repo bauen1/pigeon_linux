@@ -90,26 +90,34 @@ $(SRC)/glibc: $(SRC)/$(GLIBC_DOWNLOAD_FILE)
 # Linux kernel                                                                 #
 ################################################################################
 
+LINUX_KERNEL_MAKE=$(MAKE) -C $(SRC)/kernel O=$(BUILD)/linux -j $(NUM_JOBS)
+
 .PHONY: linux_kernel
 linux_kernel: $(BUILD)/linux/arch/x86/boot/bzImage
 	@echo "Finished building the kernel"
 
 $(BUILD)/linux/.config: linux_src
 	mkdir -p $(@D) && rm -rf $(@D)/*
-	$(MAKE) -C $(SRC)/kernel O=$(BUILD)/linux defconfig -j $(NUM_JOBS)
+	$(LINUX_KERNEL_MAKE) defconfig
 
 $(BUILD)/linux/vmlinux: $(BUILD)/linux/.config
-	$(MAKE) -C $(SRC)/kernel O=$(BUILD)/linux vmlinux -j $(NUM_JOBS)
+	$(LINUX_KERNEL_MAKE) vmlinux
 
 $(BUILD)/linux/arch/x86/boot/bzImage: $(BUILD)/linux/vmlinux
-	$(MAKE) -C $(SRC)/kernel O=$(BUILD)/linux bzImage -j $(NUM_JOBS)
+	$(LINUX_KERNEL_MAKE) bzImage
 
 $(BUILD)/bzImage: $(BUILD)/linux/arch/x86/boot/bzImage
 	cp $< $@
 
 $(BUILD)/install/linux/include: $(BUILD)/linux/vmlinux
 	mkdir -p $(@D) && rm -rf $(@D)/*
-	make INSTALL_HDR_PATH=$(@D) headers_install -j $(NUM_JOBS)
+	$(LINUX_KERNEL_MAKE)  INSTALL_HDR_PATH=$(@D) headers_install
+
+$(BUILD)/install/linux/lib: $(BUILD)/linux/vmlinux
+	mkdir -p $@ && rm -rf $@/* && mkdir -p $@/modules $@/firmware
+	$(LINUX_KERNEL_MAKE) modules
+	$(LINUX_KERNEL_MAKE) INSTALL_MOD_PATH=$(BUILD)/install/linux modules_install
+	$(LINUX_KERNEL_MAKE) INSTALL_FW_PATH=$(BUILD)/install/linux/lib/firmware firmware_install
 
 ################################################################################
 # busybox                                                                      #
