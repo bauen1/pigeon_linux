@@ -1,0 +1,7 @@
+# Ignore all build output
+build/*
+# TODO: there has to be somekind of pattern for this
+!build/.keep
+
+#!.keep
+#!*/
