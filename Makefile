@@ -184,6 +184,7 @@ $(BUILD)/initrd: $(BUILD)/busybox/busybox
 	#mkdir -p $@/tmp
 	mkdir -p $@/usr
 	cp $(BUILD)/busybox/busybox $@/bin/busybox
+	cp $(SRC)/rootfs/init $@/init # borrow the init file from the rootfs (FIXME)
 	# "borrow" some libraries for the time being ( 'ldd build/busybox/busybox' )
 	cp /lib/x86_64-linux-gnu/libm.so.6 $@/lib/x86_64-linux-gnu/libm.so.6
 	cp /lib/x86_64-linux-gnu/libc.so.6 $@/lib/x86_64-linux-gnu/libc.so.6
