@@ -22,11 +22,14 @@ all: qemu
 	# TODO: Implement
 
 .PHONY: clean
-clean:
+clean: build_clean
 	# TODO: Implement
-	rm -rf $(BUILD)/*
 	rm -rf $(SRC)/kernel
 	rm -rf $(SRC)/busybox
+
+.PHONY: build_clean
+build_clean:
+	rm -rf $(BUILD)/*
 
 .POHNY: qemu
 qemu: $(BUILD)/initrd.img $(BUILD)/bzImage
@@ -123,6 +126,17 @@ $(BUILD)/busybox/busybox: $(BUILD)/busybox/.config
 # glibc                                                                        #
 ################################################################################
 
+$(BUILD)/glibc/Makefile: $(SRC)/glibc $(BUILD)/install/linux/include
+	mkdir -p $(@D) && rm -rf $(@D)/*
+	# TODO: install the actuall headers somewhere
+	$(SRC)/glibc/configure \
+		--prefix= \
+		--with-headers="$(BUILD)/install/linux/include" \
+		--without-gd \
+		--without-selinux \
+		--disable-werror \
+		CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" # FIXME: what does this do ?
+
 
 ################################################################################
 # initrd.img                                                                   #
@@ -132,7 +146,17 @@ $(BUILD)/initrd.img: $(BUILD)/initrd
 	$(shell cd $< && find . | cpio -o -H newc | gzip > $@ )
 
 $(BUILD)/initrd: $(BUILD)/busybox/busybox
-	mkdir -p $@/{bin,boot,dev,etc,lib,lib64,mnt,root,sbin,tmp,usr}
+	mkdir -p $@/bin
+	#mkdir -p $@/boot
+	mkdir -p $@/dev
+	#mkdir -p $@/etc
+	mkdir -p $@/lib
+	mkdir -p $@/lib64
+	#mkdir -p $@/mnt
+	#mkdir -p $@/root
+	mkdir -p $@/sbin
+	#mkdir -p $@/tmp
+	mkdir -p $@/usr
 	cp $(BUILD)/busybox/busybox $@/bin/busybox
 	# "borrow" some libraries for the time being ( 'ldd build/busybox/busybox' )
 	cp /lib/x86_64-linux-gnu/libm.so.6 $@/lib/x86_64-linux-gnu/libm.so.6
