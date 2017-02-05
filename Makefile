@@ -153,6 +153,10 @@ $(BUILD)/busybox/.config: $(SRC)/busybox
 	mkdir -p $(@D) && rm -rf $(@D)/*
 	$(MAKE) -C $(SRC)/busybox O=$(BUILD)/busybox defconfig -j $(NUM_JOBS)
 	sed -i "s/.*CONFIG_STATIC.*/CONFIG_STATIC=y/" "$@"
+	#sed -i "s/CONFIG_SYSROOT=""/CONFIG_SYSROOT="$(GLIBC_PREPARED_ESCAPED)"/" $@
+	echo CONFIG_SYSROOT="$(GLIBC_PREPARED_ESCAPED)" >> $@ # FIXME: hacky
+	#$(shell cd $(@D) && sed -i "s/.\*CONFIG_INETD.\*/CONFIG_INETD=n/" .config)
+	#sed -i "s/.*CONFIG_SYSROOT.*/CONFIG_SYSROOT="$(GLIBC_PREPARED_ESCAPED)"/" $@
 
 
 $(BUILD)/busybox/busybox: $(BUILD)/busybox/.config
@@ -178,8 +182,10 @@ $(BUILD)/initrd: $(BUILD)/busybox/busybox $(SRC)/initfs/init
 	#mkdir -p $@/tmp
 	mkdir -p $@/usr
 	cp $(BUILD)/busybox/busybox $@/bin/busybox
+	chmod +x $@/bin/busybox
 	# FIXME: borrowing the init file from the rootfs
 	cp $(SRC)/initfs/init $@/init
+	chmod +x $@/init
 	# FIXME: "borrowing" some libraries for the time being ( 'ldd build/busybox/busybox' )
 	cp /lib/x86_64-linux-gnu/libm.so.6 $@/lib/x86_64-linux-gnu/libm.so.6
 	cp /lib/x86_64-linux-gnu/libc.so.6 $@/lib/x86_64-linux-gnu/libc.so.6
