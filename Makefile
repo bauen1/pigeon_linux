@@ -118,25 +118,26 @@ $(BUILD)/install/linux: $(BUILD)/install/linux/include $(BUILD)/install/linux/li
 $(BUILD)/glibc/Makefile: $(SRC)/glibc $(BUILD)/install/linux/include
 	mkdir -p $(@D) && rm -rf $(@D)/*
 	# TODO: install the actuall headers somewhere
-	$(SRC)/glibc/configure \
+	$(shell cd "$(@D)" && $(SRC)/glibc/configure \
 		--prefix= \
 		--with-headers="$(BUILD)/install/linux/include" \
 		--without-gd \
 		--without-selinux \
 		--disable-werror \
-		CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" # FIXME: what does this do ?
+		CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" )
+		# FIXME: what does the line above do ?
 
 $(BUILD)/glibc: $(BUILD)/glibc/Makefile
 	$(MAKE) -C $(BUILD)/glibc -j $(NUM_JOBS)
 
-$(BUILD)/install/glibc:
-	$(MAKE) -C $(BUILD)/glibc DESTDIR=$@ -j $(NUM_JOBS)
+$(BUILD)/install/glibc: $(BUILD)/glibc
+	$(MAKE) -C $(BUILD)/glibc DESTDIR=$@ install -j $(NUM_JOBS)
 
 ################################################################################
 # sysroot                                                                      #
 ################################################################################
 
-$(BUILD)/prepared/sysroot: $(BUILD)/install/linux
+$(BUILD)/prepared/sysroot: $(BUILD)/install/linux $(BUILD)/install/glibc
 	mkdir -p $@ && rm -rf $@/*
 	cp -r $(BUILD)/install/linux/* $@/
 	cp -r $(BUILD)/install/glibc/* $@/
