@@ -13,14 +13,9 @@ BUILD ?=$(PWD)/build
 DOCS ?=$(PWD)/docs
 NUM_JOBS ?=4
 
-# Optimize for size
-CFLAGS?=-Os
-
-## please note that this prevents options and extra flags from being passed to
-## the subdirectory targets, this can be usefull to debug why certain targets
-## are rebuild everytime without getting all the spam
-## TODO: debug why glibc is being reinstalled everytime
-#MAKE=make
+# Optimize for size, strip, disable stack smash protection (FIXME), protect
+# against bad implementations
+CFLAGS ?=-Os -s -fno-stack-protector -U_FORTIFY_SOURCE
 
 ################################################################################
 # Special Targets                                                              #
@@ -47,8 +42,8 @@ qemu: $(BUILD)/initrd.img $(BUILD)/bzImage
 
 # linux kernel
 
-LINUX_KERNEL_DOWNLOAD_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-4.4.47.tar.xz
 LINUX_KERNEL_DOWNLOAD_FILE=linux-4.4.47.tar.xz
+LINUX_KERNEL_DOWNLOAD_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-4.4.47.tar.xz
 
 $(SRC)/$(LINUX_KERNEL_DOWNLOAD_FILE):
 	rm -rf $@ && wget $(LINUX_KERNEL_DOWNLOAD_URL) -O $@
@@ -59,8 +54,8 @@ $(SRC)/kernel: $(SRC)/$(LINUX_KERNEL_DOWNLOAD_FILE)
 
 # busybox
 
-BUSYBOX_DOWNLOAD_URL=http://busybox.net/downloads/busybox-1.26.2.tar.bz2
 BUSYBOX_DOWNLOAD_FILE=busybox-1.26.2.tar.bz2
+BUSYBOX_DOWNLOAD_URL=http://busybox.net/downloads/$(BUSYBOX_DOWNLOAD_FILE)
 
 $(SRC)/$(BUSYBOX_DOWNLOAD_FILE):
 	rm -rf $@ && wget $(BUSYBOX_DOWNLOAD_URL) -O $@
@@ -71,8 +66,8 @@ $(SRC)/busybox: $(SRC)/$(BUSYBOX_DOWNLOAD_FILE)
 
 # glibc
 
-GLIBC_DOWNLOAD_URL=https://ftp.gnu.org/gnu/libc/glibc-2.24.tar.xz
 GLIBC_DOWNLOAD_FILE=glibc-2.24.tar.xz
+GLIBC_DOWNLOAD_URL=https://ftp.gnu.org/gnu/libc/$(GLIBC_DOWNLOAD_FILE)
 
 $(SRC)/$(GLIBC_DOWNLOAD_FILE):
 	rm -rf $@ && wget $(GLIBC_DOWNLOAD_URL) -O $@
@@ -123,7 +118,7 @@ $(BUILD)/install/linux: $(BUILD)/install/linux/include $(BUILD)/install/linux/li
 # glibc                                                                        #
 ################################################################################
 
-GLIBC_CFLAGS="$(CFLAGS) -s -fno-stack-protector -U_FORTIFY_SOURCE"
+GLIBC_CFLAGS="$(CFLAGS)"
 
 # configure glibc for compile
 $(BUILD)/glibc/Makefile: $(SRC)/glibc $(BUILD)/install/linux
@@ -134,16 +129,16 @@ $(BUILD)/glibc/Makefile: $(SRC)/glibc $(BUILD)/install/linux
 		--without-gd \
 		--without-selinux \
 		--disable-werror \
-		CFLAGS=$(GLIBC_CFLAGS)
+		CFLAGS=$(GLIBC_CFLAGS) && touch $@
 		# FIXME: what does the line above do ?
 
 # build glibc
 $(BUILD)/glibc: $(BUILD)/glibc/Makefile
-	$(MAKE) -C $(BUILD)/glibc -j $(NUM_JOBS)
+	$(MAKE) -C $(BUILD)/glibc -j $(NUM_JOBS) && touch $@
 
 # install glibc
 $(BUILD)/install/glibc: $(BUILD)/glibc
-	$(MAKE) -C $(BUILD)/glibc DESTDIR=$@ install -j $(NUM_JOBS)
+	$(MAKE) -C $(BUILD)/glibc DESTDIR=$@ install -j $(NUM_JOBS) && touch $@
 
 ################################################################################
 # sysroot                                                                      #
@@ -170,12 +165,16 @@ $(BUILD)/prepared/sysroot: $(BUILD)/install/linux $(BUILD)/install/glibc
 
 SYSROOT_ESCAPED=$(subst /,\/,$(subst \,\\,$(BUILD)/prepared/sysroot))
 
-BUSYBOX_MAKE=$(MAKE) -C $(SRC)/busybox O=$(BUILD)/busybox -j $(NUM_JOBS) CFLAGS="$(CFLAGS) -s -fno-stack-protector -fomit-frame-pointer -U_FORTIFY_SOURCE"
+# TODO: remove as many flags and recompile busybox to see which are actually needed
 
-$(BUILD)/busybox/.config: $(SRC)/busybox
+BUSYBOX_MAKE=$(MAKE) -C $(SRC)/busybox O=$(BUILD)/busybox -j $(NUM_JOBS) CFLAGS="$(CFLAGS) -fomit-frame-pointer"
+
+$(BUILD)/busybox/.config: $(SRC)/busybox $(BUILD)/prepared/sysroot
 	mkdir -p $(@D) && rm -rf $(@D)/*
 	$(BUSYBOX_MAKE) defconfig
-	## For macOS, add '.bak' behind -i ( btw my congratulations if you compile this under macOS )
+	## For macOS, add '.bak' behind -i
+	## ( btw my congratulations if you compile this under macOS or BSD
+	## or something else than linux )
 	cd $(@D) ; sed -i 's/.*CONFIG_STATIC.*/CONFIG_STATIC=y/g' .config
 	##
 	cd $(@D) ; sed -i 's/.*CONFIG_SYSROOT.*/CONFIG_SYSROOT="$(SYSROOT_ESCAPED)"/g' .config
@@ -195,12 +194,13 @@ $(BUILD)/initrd: $(BUILD)/busybox/busybox $(SRC)/initfs/init
 	cp -r $(SRC)/initfs/* $@/
 	# create needed directories if not already present
 	cd $@ ; \
-		mkdir -p bin boot dev lib/x86_64-linux-gnu mnt proc root sbin sys tmp usr ; \
+		mkdir -p bin boot dev lib/x86_64-linux-gnu mnt proc root sbin sys tmp usr ;\
 		ln -s lib lib64 ; \
 		ln -s lib lib32 ;
 	# copy busybox in
 	cp $(BUILD)/busybox/busybox $@/bin/busybox
-	# FIXME: "borrowing" some libraries for the time being ( 'ldd build/busybox/busybox' )
+	# FIXME: "borrowing" some libraries for the time being
+	# use 'ldd build/busybox/busybox' to find them
 	cp /lib/x86_64-linux-gnu/libm.so.6 $@/lib/x86_64-linux-gnu/libm.so.6
 	cp /lib/x86_64-linux-gnu/libc.so.6 $@/lib/x86_64-linux-gnu/libc.so.6
 	cp /lib64/ld-linux-x86-64.so.2 $@/lib64/ld-linux-x86-64.so.2
