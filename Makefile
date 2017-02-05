@@ -185,7 +185,8 @@ $(BUILD)/busybox/.config: $(SRC)/busybox $(BUILD)/prepared/sysroot
 	## For macOS, add '.bak' behind -i
 	## ( btw my congratulations if you compile this under macOS or BSD
 	## or something else than linux )
-	cd $(@D) ; sed -i 's/.*CONFIG_STATIC.*/CONFIG_STATIC=y/g' .config
+	#cd $(@D) ; sed -i 's/.*CONFIG_STATIC.*/CONFIG_STATIC=y/g' .config
+	# dynamic linking rules!
 	##
 	cd $(@D) ; sed -i 's/.*CONFIG_SYSROOT.*/CONFIG_SYSROOT="$(SYSROOT_ESCAPED)"/g' .config
 
@@ -209,11 +210,9 @@ $(BUILD)/initrd: $(BUILD)/busybox/busybox $(SRC)/initfs/init
 		ln -s lib lib32 ;
 	# copy busybox in
 	cp $(BUILD)/busybox/busybox $@/bin/busybox
-	# FIXME: "borrowing" some libraries for the time being
-	# use 'ldd build/busybox/busybox' to find them
-	cp /lib/x86_64-linux-gnu/libm.so.6 $@/lib/x86_64-linux-gnu/libm.so.6
-	cp /lib/x86_64-linux-gnu/libc.so.6 $@/lib/x86_64-linux-gnu/libc.so.6
-	cp /lib64/ld-linux-x86-64.so.2 $@/lib64/ld-linux-x86-64.so.2
+	# copy the sysroot over (kernel headers and glibc libraries)
+	cp -r $(BUILD)/prepared/sysroot/* $@/
+	#
 	# Fix the permissions (FIXME: this shouldn't be needed)
 	chmod +x $@/init $@/bin/busybox
 	touch $@
