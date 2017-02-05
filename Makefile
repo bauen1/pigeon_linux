@@ -62,7 +62,7 @@ $(SRC)/kernel: $(SRC)/$(LINUX_KERNEL_DOWNLOAD_FILE)
 
 # busybox
 
-BUSYBOX_DOWNLOAD_FILE=busybox-1.26.2.tar.bz2
+BUSYBOX_DOWNLOAD_FILE=busybox-1.22.0.tar.bz2
 BUSYBOX_DOWNLOAD_URL=http://busybox.net/downloads/$(BUSYBOX_DOWNLOAD_FILE)
 
 $(SRC)/$(BUSYBOX_DOWNLOAD_FILE):
@@ -74,7 +74,7 @@ $(SRC)/busybox: $(SRC)/$(BUSYBOX_DOWNLOAD_FILE)
 
 # glibc
 
-GLIBC_DOWNLOAD_FILE=glibc-2.24.tar.xz
+GLIBC_DOWNLOAD_FILE=glibc-2.19.tar.xz
 GLIBC_DOWNLOAD_URL=https://ftp.gnu.org/gnu/libc/$(GLIBC_DOWNLOAD_FILE)
 
 $(SRC)/$(GLIBC_DOWNLOAD_FILE):
