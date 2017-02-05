@@ -208,12 +208,13 @@ $(BUILD)/initrd: $(BUILD)/busybox/busybox $(SRC)/initfs $(SRC)/initfs/init
 	mkdir -p $@ && rm -rf $@/*
 	cp -a $(SRC)/initfs/* $@/
 	# create needed directories if not already present
-	cd $@ ; mkdir -p bin boot dev lib lib64 mnt proc root sbin sys tmp usr
-	cp $@/lib/ld-linux* $@/lin64
+	cd $@ && mkdir -p bin boot dev lib lib64 mnt proc root sbin sys tmp usr
 	# copy busybox in
 	cp $(BUILD)/busybox/busybox $@/bin/busybox
 	# copy the sysroot over (kernel headers and glibc libraries)
 	cp -a $(BUILD)/prepared/sysroot/* $@/
+	# we need the linkers to be where they should be
+	cp $@/lib/ld-linux* $@/lib64
 	#
 	touch $@
 
