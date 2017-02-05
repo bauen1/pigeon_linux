@@ -7,6 +7,13 @@
 # install symlinks for all the applets
 /bin/busybox --install
 
+# Grab the hostname from /etc/hostname if it exists
+[ -f /etc/hostname ] && HOSTNAME="$(cat /etc/hostname)"
+# and default to "localhost"
+[ -z "$HOSTNAME" ] && HOSTNAME=localhost
+
+hostname "$HOSTNAME"
+
 echo ""
 cat /etc/motd
 echo ""
