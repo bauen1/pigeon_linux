@@ -156,21 +156,18 @@ $(BUILD)/prepared/sysroot: $(BUILD)/install/linux $(BUILD)/install/glibc
 
 SYSROOT_ESCAPED=$(subst /,\/,$(subst \,\\,$(BUILD)/prepared/sysroot))
 
+BUSYBOX_MAKE=$(MAKE) -C $(SRC)/busybox O=$(BUILD)/busybox -j $(NUM_JOBS) CFLAGS="-Os -s -fno-stack-protector -fomit-frame-pointer -U_FORTIFY_SOURCE"
+
 $(BUILD)/busybox/.config: $(SRC)/busybox
 	mkdir -p $(@D) && rm -rf $(@D)/*
-	$(MAKE) -C $(SRC)/busybox O=$(BUILD)/busybox defconfig -j $(NUM_JOBS)
+	$(BUSYBOX_MAKE) defconfig
 	## For macOS, add '.bak' behind -i ( btw my congratulations if you compile this under macOS )
 	cd $(@D) ; sed -i 's/.*CONFIG_STATIC.*/CONFIG_STATIC=y/g' .config
 	##
 	cd $(@D) ; sed -i 's/.*CONFIG_SYSROOT.*/CONFIG_SYSROOT="$(SYSROOT_ESCAPED)"/g' .config
-	#sed -i "s/CONFIG_SYSROOT=""/CONFIG_SYSROOT="$(GLIBC_PREPARED_ESCAPED)"/" $@
-	#echo CONFIG_SYSROOT="$(SYSROOT_ESCAPED)" >> $@ # FIXME: hacky
-	#$(shell cd $(@D) && sed -i "s/.\*CONFIG_INETD.\*/CONFIG_INETD=n/" .config)
-	#sed -i "s/.*CONFIG_SYSROOT.*/CONFIG_SYSROOT="$(GLIBC_PREPARED_ESCAPED)"/" $@
-
 
 $(BUILD)/busybox/busybox: $(BUILD)/busybox/.config $(BUILD)/prepared/sysroot
-	$(MAKE) -C $(SRC)/busybox O=$(BUILD)/busybox all -j $(NUM_JOBS)
+	$(BUSYBOX_MAKE) all
 
 ################################################################################
 # initrd.img                                                                   #
