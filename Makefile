@@ -204,7 +204,7 @@ $(BUILD)/busybox/busybox: $(BUILD)/busybox/.config $(BUILD)/prepared/sysroot
 $(BUILD)/initrd.img: $(BUILD)/initrd
 	$(shell cd $< && find . | cpio -o -H newc | gzip > $@ )
 
-$(BUILD)/initrd: $(BUILD)/busybox/busybox $(SRC)/initfs/init
+$(BUILD)/initrd: $(BUILD)/busybox/busybox $(SRC)/initfs $(SRC)/initfs/init
 	mkdir -p $@ && rm -rf $@/*
 	cp -a $(SRC)/initfs/* $@/
 	# create needed directories if not already present
