@@ -32,6 +32,10 @@ clean:
 
 .POHNY: qemu
 qemu: $(BUILD)/initrd.img $(BUILD)/bzImage
+	# FIXME: there seems to be a bug that on the first run with a newly build
+	# initrd the kernel crashes due to acpi (for what ever reason)
+	sleep 3
+	-sync
 	qemu-system-x86_64 -initrd $(BUILD)/initrd.img -kernel $(BUILD)/bzImage
 
 ################################################################################
@@ -103,6 +107,7 @@ $(BUILD)/bzImage: $(BUILD)/linux/arch/x86/boot/bzImage
 $(BUILD)/install/linux/include: $(BUILD)/linux/vmlinux
 	mkdir -p $(@D) && rm -rf $(@D)/*
 	$(LINUX_KERNEL_MAKE)  INSTALL_HDR_PATH=$(@D) headers_install
+	touch $@
 
 # install the kernel modules and firmware
 $(BUILD)/install/linux/lib: $(BUILD)/linux/vmlinux
@@ -110,9 +115,11 @@ $(BUILD)/install/linux/lib: $(BUILD)/linux/vmlinux
 	$(LINUX_KERNEL_MAKE) modules
 	$(LINUX_KERNEL_MAKE) INSTALL_MOD_PATH=$(BUILD)/install/linux modules_install
 	$(LINUX_KERNEL_MAKE) INSTALL_FW_PATH=$(BUILD)/install/linux/lib/firmware firmware_install
+	touch $@
 
 #
 $(BUILD)/install/linux: $(BUILD)/install/linux/include $(BUILD)/install/linux/lib
+	touch $@
 
 ################################################################################
 # glibc                                                                        #
@@ -150,6 +157,7 @@ $(BUILD)/prepared/sysroot: $(BUILD)/install/linux $(BUILD)/install/glibc
 	cp -r $(BUILD)/install/linux/* $@/
 	cp -r $(BUILD)/install/glibc/* $@/
 	mkdir -p $@/usr
+	# TODO: not sure if the commands below are needed
 	$(shell cd $@/usr \
 		ln -s ../include include \
 		ln -s ../lib lib )
@@ -158,11 +166,13 @@ $(BUILD)/prepared/sysroot: $(BUILD)/install/linux $(BUILD)/install/glibc
 		ln -s $(BUILD)/install/linux/include/asm asm \
 		ln -s $(BUILD)/install/linux/include/asm-generic asm-generic \
 		ln -s $(BUILD)/install/linux/include/mtd mtd )
+	touch $@
 
 ################################################################################
 # busybox                                                                      #
 ################################################################################
 
+# Escape / and \ because sed uses them for magic
 SYSROOT_ESCAPED=$(subst /,\/,$(subst \,\\,$(BUILD)/prepared/sysroot))
 
 # TODO: remove as many flags and recompile busybox to see which are actually needed
@@ -180,7 +190,7 @@ $(BUILD)/busybox/.config: $(SRC)/busybox $(BUILD)/prepared/sysroot
 	cd $(@D) ; sed -i 's/.*CONFIG_SYSROOT.*/CONFIG_SYSROOT="$(SYSROOT_ESCAPED)"/g' .config
 
 $(BUILD)/busybox/busybox: $(BUILD)/busybox/.config $(BUILD)/prepared/sysroot
-	$(BUSYBOX_MAKE) all
+	$(BUSYBOX_MAKE) all && touch $@
 
 ################################################################################
 # initrd.img                                                                   #
@@ -206,6 +216,7 @@ $(BUILD)/initrd: $(BUILD)/busybox/busybox $(SRC)/initfs/init
 	cp /lib64/ld-linux-x86-64.so.2 $@/lib64/ld-linux-x86-64.so.2
 	# Fix the permissions (FIXME: this shouldn't be needed)
 	chmod +x $@/init $@/bin/busybox
+	touch $@
 
 ################################################################################
 #                                                                              #
