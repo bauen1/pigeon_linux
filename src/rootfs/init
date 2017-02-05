@@ -8,8 +8,7 @@ mount -t proc /proc /proc
 mount -t sysfs none /sys
 
 mknod dev/console 5 1
-mknod dev/ram0 b 1 1
-mknod dev/null c 1 3 # FIXME: is this really needed ?
+mknod dev/null c 1 3
 mknod dev/tty1 c 4 1
 mknod dev/tty2 c 4 2
 

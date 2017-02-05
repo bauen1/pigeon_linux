@@ -46,9 +46,6 @@ qemu: $(BUILD)/initrd.img $(BUILD)/bzImage
 LINUX_KERNEL_DOWNLOAD_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-4.9.8.tar.xz
 LINUX_KERNEL_DOWNLOAD_FILE=linux-4.9.8.tar.xz
 
-.PHONY: linux_src
-linux_src: $(SRC)/kernel
-
 $(SRC)/$(LINUX_KERNEL_DOWNLOAD_FILE):
 	rm -rf $@ && wget $(LINUX_KERNEL_DOWNLOAD_URL) -O $@
 
@@ -60,9 +57,6 @@ $(SRC)/kernel: $(SRC)/$(LINUX_KERNEL_DOWNLOAD_FILE)
 
 BUSYBOX_DOWNLOAD_URL=http://busybox.net/downloads/busybox-1.26.2.tar.bz2
 BUSYBOX_DOWNLOAD_FILE=busybox-1.26.2.tar.bz2
-
-.PHONY: busybox_src
-busybox_src: $(SRC)/busybox
 
 $(SRC)/$(BUSYBOX_DOWNLOAD_FILE):
 	rm -rf $@ && wget $(BUSYBOX_DOWNLOAD_URL) -O $@
@@ -92,11 +86,7 @@ $(SRC)/glibc: $(SRC)/$(GLIBC_DOWNLOAD_FILE)
 
 LINUX_KERNEL_MAKE=$(MAKE) -C $(SRC)/kernel O=$(BUILD)/linux -j $(NUM_JOBS)
 
-.PHONY: linux_kernel
-linux_kernel: $(BUILD)/linux/arch/x86/boot/bzImage
-	@echo "Finished building the kernel"
-
-$(BUILD)/linux/.config: linux_src
+$(BUILD)/linux/.config: $(SRC)/kernel
 	mkdir -p $(@D) && rm -rf $(@D)/*
 	$(LINUX_KERNEL_MAKE) defconfig
 
@@ -159,7 +149,7 @@ $(BUILD)/prepared/glibc:
 
 GLIBC_PREPARED_ESCAPED=$(subst /,\/,$(subst \,\\,$(BUILD)/prepared/glibc))
 
-$(BUILD)/busybox/.config: busybox_src
+$(BUILD)/busybox/.config: $(SRC)/busybox
 	mkdir -p $(@D) && rm -rf $(@D)/*
 	$(MAKE) -C $(SRC)/busybox O=$(BUILD)/busybox defconfig -j $(NUM_JOBS)
 
@@ -174,7 +164,7 @@ $(BUILD)/busybox/busybox: $(BUILD)/busybox/.config
 $(BUILD)/initrd.img: $(BUILD)/initrd
 	$(shell cd $< && find . | cpio -o -H newc | gzip > $@ )
 
-$(BUILD)/initrd: $(BUILD)/busybox/busybox
+$(BUILD)/initrd: $(BUILD)/busybox/busybox $(SRC)/initfs/init
 	mkdir -p $@/bin
 	#mkdir -p $@/boot
 	mkdir -p $@/dev
@@ -188,7 +178,7 @@ $(BUILD)/initrd: $(BUILD)/busybox/busybox
 	mkdir -p $@/usr
 	cp $(BUILD)/busybox/busybox $@/bin/busybox
 	# FIXME: borrowing the init file from the rootfs
-	cp $(SRC)/rootfs/init $@/init
+	cp $(SRC)/initfs/init $@/init
 	# FIXME: "borrowing" some libraries for the time being ( 'ldd build/busybox/busybox' )
 	cp /lib/x86_64-linux-gnu/libm.so.6 $@/lib/x86_64-linux-gnu/libm.so.6
 	cp /lib/x86_64-linux-gnu/libc.so.6 $@/lib/x86_64-linux-gnu/libc.so.6
