@@ -201,13 +201,10 @@ $(BUILD)/initrd.img: $(BUILD)/initrd
 	$(shell cd $< && find . | cpio -o -H newc | gzip > $@ )
 
 $(BUILD)/initrd: $(BUILD)/busybox/busybox $(SRC)/initfs/init
-	mkdir -p $@
+	mkdir -p $@ && rm -rf $@/*
 	cp -r $(SRC)/initfs/* $@/
 	# create needed directories if not already present
-	cd $@ ; \
-		mkdir -p bin boot dev lib/x86_64-linux-gnu mnt proc root sbin sys tmp usr ;\
-		ln -s lib lib64 ; \
-		ln -s lib lib32 ;
+	cd $@ ; mkdir -p bin boot dev lib mnt proc root sbin sys tmp usr
 	# copy busybox in
 	cp $(BUILD)/busybox/busybox $@/bin/busybox
 	# copy the sysroot over (kernel headers and glibc libraries)
