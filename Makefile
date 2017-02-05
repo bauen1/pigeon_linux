@@ -38,6 +38,10 @@ qemu: $(BUILD)/initrd.img $(BUILD)/bzImage
 	-sync
 	qemu-system-x86_64 -initrd $(BUILD)/initrd.img -kernel $(BUILD)/bzImage
 
+qemu_serial: $(BUILD)/inird.img $(BUILD)/bzImage
+	sleep 3
+	-sync
+	qemu-system-x86_64 -initrd $(BUILD)/initrd.img -kernel $(BUILD)/bzImage -nographic -append console=ttyS0
 ################################################################################
 # Source downloading                                                           #
 ################################################################################
@@ -205,6 +209,7 @@ $(BUILD)/initrd: $(BUILD)/busybox/busybox $(SRC)/initfs/init
 	cp -a $(SRC)/initfs/* $@/
 	# create needed directories if not already present
 	cd $@ ; mkdir -p bin boot dev lib mnt proc root sbin sys tmp usr
+	cd $@ ; ln -s lib lib64
 	# copy busybox in
 	cp $(BUILD)/busybox/busybox $@/bin/busybox
 	# copy the sysroot over (kernel headers and glibc libraries)
