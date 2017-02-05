@@ -117,14 +117,13 @@ $(BUILD)/install/linux: $(BUILD)/install/linux/include $(BUILD)/install/linux/li
 
 $(BUILD)/glibc/Makefile: $(SRC)/glibc $(BUILD)/install/linux/include
 	mkdir -p $(@D) && rm -rf $(@D)/*
-	# TODO: install the actuall headers somewhere
-	$(shell cd "$(@D)" && $(SRC)/glibc/configure \
+	cd "$(@D)" ; $(SRC)/glibc/configure \
 		--prefix= \
 		--with-headers="$(BUILD)/install/linux/include" \
 		--without-gd \
 		--without-selinux \
 		--disable-werror \
-		CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE" )
+		CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE"
 		# FIXME: what does the line above do ?
 
 $(BUILD)/glibc: $(BUILD)/glibc/Makefile
