@@ -191,22 +191,13 @@ $(BUILD)/initrd.img: $(BUILD)/initrd
 
 $(BUILD)/initrd: $(BUILD)/busybox/busybox $(SRC)/initfs/init
 	mkdir -p $@
-	cp $(SRC)/initfs/* $@/
-	mkdir -p $@/bin
-	#mkdir -p $@/boot
-	mkdir -p $@/dev
-	mkdir -p $@/lib/x86_64-linux-gnu
-	#
-	# create symlinks for the 32/64 bit libraries
-	cd $@ ; ln -s lib lib64 ; ln -s lib lib32
-	#mkdir -p $@/lib64
-	#mkdir -p $@/mnt
-	mkdir -p $@/proc
-	#mkdir -p $@/root
-	mkdir -p $@/sbin
-	mkdir -p $@/sys
-	#mkdir -p $@/tmp
-	mkdir -p $@/usr
+	cp -r $(SRC)/initfs/* $@/
+	# create needed directories if not already present
+	cd $@ ; \
+		mkdir -p bin boot dev lib/x86_64-linux-gnu mnt proc root sbin sys tmp usr ; \
+		ln -s lib lib64 ; \
+		ln -s lib lib32 ;
+	# copy busybox in
 	cp $(BUILD)/busybox/busybox $@/bin/busybox
 	# FIXME: "borrowing" some libraries for the time being ( 'ldd build/busybox/busybox' )
 	cp /lib/x86_64-linux-gnu/libm.so.6 $@/lib/x86_64-linux-gnu/libm.so.6
