@@ -152,6 +152,7 @@ GLIBC_PREPARED_ESCAPED=$(subst /,\/,$(subst \,\\,$(BUILD)/prepared/glibc))
 $(BUILD)/busybox/.config: $(SRC)/busybox
 	mkdir -p $(@D) && rm -rf $(@D)/*
 	$(MAKE) -C $(SRC)/busybox O=$(BUILD)/busybox defconfig -j $(NUM_JOBS)
+	sed -i "s/.*CONFIG_STATIC.*/CONFIG_STATIC=y/" "$@"
 
 
 $(BUILD)/busybox/busybox: $(BUILD)/busybox/.config
