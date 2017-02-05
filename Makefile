@@ -33,7 +33,7 @@ build_clean:
 
 .POHNY: qemu
 qemu: $(BUILD)/initrd.img $(BUILD)/bzImage
-	qemu-system-i386 -initrd $(BUILD)/initrd.img -kernel $(BUILD)/bzImage
+	qemu-system-x86_64 -initrd $(BUILD)/initrd.img -kernel $(BUILD)/bzImage
 
 ################################################################################
 # Source downloading                                                           #
@@ -120,17 +120,6 @@ $(BUILD)/install/linux/lib: $(BUILD)/linux/vmlinux
 	$(LINUX_KERNEL_MAKE) INSTALL_FW_PATH=$(BUILD)/install/linux/lib/firmware firmware_install
 
 ################################################################################
-# busybox                                                                      #
-################################################################################
-
-$(BUILD)/busybox/.config: busybox_src
-	mkdir -p $(@D) && rm -rf $(@D)/*
-	$(MAKE) -C $(SRC)/busybox O=$(BUILD)/busybox defconfig -j $(NUM_JOBS)
-
-$(BUILD)/busybox/busybox: $(BUILD)/busybox/.config
-	$(MAKE) -C $(SRC)/busybox O=$(BUILD)/busybox all -j $(NUM_JOBS)
-
-################################################################################
 # glibc                                                                        #
 ################################################################################
 
@@ -165,6 +154,20 @@ $(BUILD)/prepared/glibc:
 		ln -s $(BUILD)/install/linux/include/mtd mtd )
 
 ################################################################################
+# busybox                                                                      #
+################################################################################
+
+GLIBC_PREPARED_ESCAPED=$(subst /,\/,$(subst \,\\,$(BUILD)/prepared/glibc))
+
+$(BUILD)/busybox/.config: busybox_src
+	mkdir -p $(@D) && rm -rf $(@D)/*
+	$(MAKE) -C $(SRC)/busybox O=$(BUILD)/busybox defconfig -j $(NUM_JOBS)
+
+
+$(BUILD)/busybox/busybox: $(BUILD)/busybox/.config
+	$(MAKE) -C $(SRC)/busybox O=$(BUILD)/busybox all -j $(NUM_JOBS)
+
+################################################################################
 # initrd.img                                                                   #
 ################################################################################
 
@@ -184,8 +187,9 @@ $(BUILD)/initrd: $(BUILD)/busybox/busybox
 	#mkdir -p $@/tmp
 	mkdir -p $@/usr
 	cp $(BUILD)/busybox/busybox $@/bin/busybox
-	cp $(SRC)/rootfs/init $@/init # borrow the init file from the rootfs (FIXME)
-	# "borrow" some libraries for the time being ( 'ldd build/busybox/busybox' )
+	# FIXME: borrowing the init file from the rootfs
+	cp $(SRC)/rootfs/init $@/init
+	# FIXME: "borrowing" some libraries for the time being ( 'ldd build/busybox/busybox' )
 	cp /lib/x86_64-linux-gnu/libm.so.6 $@/lib/x86_64-linux-gnu/libm.so.6
 	cp /lib/x86_64-linux-gnu/libc.so.6 $@/lib/x86_64-linux-gnu/libc.so.6
 	cp /lib64/ld-linux-x86-64.so.2 $@/lib64/ld-linux-x86-64.so.2
