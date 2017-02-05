@@ -13,6 +13,9 @@ BUILD ?=$(PWD)/build
 DOCS ?=$(PWD)/docs
 NUM_JOBS ?=4
 
+# Optimize for size
+CFLAGS?=-Os
+
 ################################################################################
 # Special Targets                                                              #
 ################################################################################
@@ -70,9 +73,6 @@ $(SRC)/busybox: $(SRC)/$(BUSYBOX_DOWNLOAD_FILE)
 GLIBC_DOWNLOAD_URL=https://ftp.gnu.org/gnu/libc/glibc-2.24.tar.xz
 GLIBC_DOWNLOAD_FILE=glibc-2.24.tar.xz
 
-.PHONY: glibc_src
-glibc_src: $(SRC)/glibc
-
 $(SRC)/$(GLIBC_DOWNLOAD_FILE):
 	rm -rf $@ && wget $(GLIBC_DOWNLOAD_URL) -O $@
 
@@ -86,36 +86,46 @@ $(SRC)/glibc: $(SRC)/$(GLIBC_DOWNLOAD_FILE)
 
 LINUX_KERNEL_MAKE=$(MAKE) -C $(SRC)/kernel O=$(BUILD)/linux -j $(NUM_JOBS)
 
+# Generate the default config for the kernel
 $(BUILD)/linux/.config: $(SRC)/kernel
 	mkdir -p $(@D) && rm -rf $(@D)/*
 	$(LINUX_KERNEL_MAKE) defconfig
 
+# generate the kernel in the vmlinux format
 $(BUILD)/linux/vmlinux: $(BUILD)/linux/.config
 	$(LINUX_KERNEL_MAKE) vmlinux
 
+# generate the kernel in the compressed self-extracting bzImage format
 $(BUILD)/linux/arch/x86/boot/bzImage: $(BUILD)/linux/vmlinux
 	$(LINUX_KERNEL_MAKE) bzImage
 
+# copy it (FIXME: move this)
 $(BUILD)/bzImage: $(BUILD)/linux/arch/x86/boot/bzImage
 	cp $< $@
 
+# install the kernel headers
 $(BUILD)/install/linux/include: $(BUILD)/linux/vmlinux
 	mkdir -p $(@D) && rm -rf $(@D)/*
 	$(LINUX_KERNEL_MAKE)  INSTALL_HDR_PATH=$(@D) headers_install
 
+# install the kernel modules and firmware
 $(BUILD)/install/linux/lib: $(BUILD)/linux/vmlinux
 	mkdir -p $@ && rm -rf $@/* && mkdir -p $@/modules $@/firmware
 	$(LINUX_KERNEL_MAKE) modules
 	$(LINUX_KERNEL_MAKE) INSTALL_MOD_PATH=$(BUILD)/install/linux modules_install
 	$(LINUX_KERNEL_MAKE) INSTALL_FW_PATH=$(BUILD)/install/linux/lib/firmware firmware_install
 
+#
 $(BUILD)/install/linux: $(BUILD)/install/linux/include $(BUILD)/install/linux/lib
 
 ################################################################################
 # glibc                                                                        #
 ################################################################################
 
-$(BUILD)/glibc/Makefile: $(SRC)/glibc $(BUILD)/install/linux/include
+GLIBC_CFLAGS="$(CFLAGS) -s -fno-stack-protector -U_FORTIFY_SOURCE"
+
+# configure glibc for compile
+$(BUILD)/glibc/Makefile: $(SRC)/glibc $(BUILD)/install/linux
 	mkdir -p $(@D) && rm -rf $(@D)/*
 	cd "$(@D)" ; $(SRC)/glibc/configure \
 		--prefix= \
@@ -123,12 +133,14 @@ $(BUILD)/glibc/Makefile: $(SRC)/glibc $(BUILD)/install/linux/include
 		--without-gd \
 		--without-selinux \
 		--disable-werror \
-		CFLAGS="-Os -s -fno-stack-protector -U_FORTIFY_SOURCE"
+		CFLAGS=$(GLIBC_CFLAGS)
 		# FIXME: what does the line above do ?
 
+# build glibc
 $(BUILD)/glibc: $(BUILD)/glibc/Makefile
 	$(MAKE) -C $(BUILD)/glibc -j $(NUM_JOBS)
 
+# install glibc
 $(BUILD)/install/glibc: $(BUILD)/glibc
 	$(MAKE) -C $(BUILD)/glibc DESTDIR=$@ install -j $(NUM_JOBS)
 
@@ -136,6 +148,7 @@ $(BUILD)/install/glibc: $(BUILD)/glibc
 # sysroot                                                                      #
 ################################################################################
 
+# create a sysroot (headers and libraries)
 $(BUILD)/prepared/sysroot: $(BUILD)/install/linux $(BUILD)/install/glibc
 	mkdir -p $@ && rm -rf $@/*
 	cp -r $(BUILD)/install/linux/* $@/
@@ -156,7 +169,7 @@ $(BUILD)/prepared/sysroot: $(BUILD)/install/linux $(BUILD)/install/glibc
 
 SYSROOT_ESCAPED=$(subst /,\/,$(subst \,\\,$(BUILD)/prepared/sysroot))
 
-BUSYBOX_MAKE=$(MAKE) -C $(SRC)/busybox O=$(BUILD)/busybox -j $(NUM_JOBS) CFLAGS="-Os -s -fno-stack-protector -fomit-frame-pointer -U_FORTIFY_SOURCE"
+BUSYBOX_MAKE=$(MAKE) -C $(SRC)/busybox O=$(BUILD)/busybox -j $(NUM_JOBS) CFLAGS="$(CFLAGS) -s -fno-stack-protector -fomit-frame-pointer -U_FORTIFY_SOURCE"
 
 $(BUILD)/busybox/.config: $(SRC)/busybox
 	mkdir -p $(@D) && rm -rf $(@D)/*
@@ -177,12 +190,16 @@ $(BUILD)/initrd.img: $(BUILD)/initrd
 	$(shell cd $< && find . | cpio -o -H newc | gzip > $@ )
 
 $(BUILD)/initrd: $(BUILD)/busybox/busybox $(SRC)/initfs/init
+	mkdir -p $@
 	cp $(SRC)/initfs/* $@/
 	mkdir -p $@/bin
 	#mkdir -p $@/boot
 	mkdir -p $@/dev
 	mkdir -p $@/lib/x86_64-linux-gnu
-	mkdir -p $@/lib64
+	#
+	# create symlinks for the 32/64 bit libraries
+	cd $@ ; ln -s lib lib64 ; ln -s lib lib32
+	#mkdir -p $@/lib64
 	#mkdir -p $@/mnt
 	mkdir -p $@/proc
 	#mkdir -p $@/root
