@@ -154,8 +154,8 @@ $(BUILD)/install/glibc: $(BUILD)/glibc
 # create a sysroot (headers and libraries)
 $(BUILD)/prepared/sysroot: $(BUILD)/install/linux $(BUILD)/install/glibc
 	mkdir -p $@ && rm -rf $@/*
-	cp -r $(BUILD)/install/linux/* $@/
-	cp -r $(BUILD)/install/glibc/* $@/
+	cp -a $(BUILD)/install/linux/* $@/
+	cp -a $(BUILD)/install/glibc/* $@/
 	mkdir -p $@/usr
 	# TODO: not sure if the commands below are needed
 	$(shell cd $@/usr \
@@ -202,16 +202,16 @@ $(BUILD)/initrd.img: $(BUILD)/initrd
 
 $(BUILD)/initrd: $(BUILD)/busybox/busybox $(SRC)/initfs/init
 	mkdir -p $@ && rm -rf $@/*
-	cp -r $(SRC)/initfs/* $@/
+	cp -a $(SRC)/initfs/* $@/
 	# create needed directories if not already present
 	cd $@ ; mkdir -p bin boot dev lib mnt proc root sbin sys tmp usr
 	# copy busybox in
 	cp $(BUILD)/busybox/busybox $@/bin/busybox
 	# copy the sysroot over (kernel headers and glibc libraries)
-	cp -r $(BUILD)/prepared/sysroot/* $@/
+	cp -a $(BUILD)/prepared/sysroot/* $@/
 	#
 	# Fix the permissions (FIXME: this shouldn't be needed)
-	chmod +x $@/init $@/bin/busybox
+	#chmod +x $@/init $@/bin/busybox
 	touch $@
 
 ################################################################################
