@@ -27,5 +27,5 @@ echo ""
 echo "Dropping you in a shell - have fun"
 echo ""
 
-
-exec /bin/busybox ash
+# Start a (job-controlling) shell
+exec setsid sh -c 'exec sh </dev/tty1 >/dev/tty1 2>&1'
