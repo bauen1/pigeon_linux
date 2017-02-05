@@ -210,13 +210,12 @@ $(BUILD)/initrd: $(BUILD)/busybox/busybox $(SRC)/initfs/init
 	# create needed directories if not already present
 	cd $@ ; mkdir -p bin boot dev lib mnt proc root sbin sys tmp usr
 	cd $@ ; ln -s lib lib64
+	cd $@/lib ; ln -s ../ x86_64-linux-gnu # FIXME:
 	# copy busybox in
 	cp $(BUILD)/busybox/busybox $@/bin/busybox
 	# copy the sysroot over (kernel headers and glibc libraries)
 	cp -a $(BUILD)/prepared/sysroot/* $@/
 	#
-	# Fix the permissions (FIXME: this shouldn't be needed)
-	#chmod +x $@/init $@/bin/busybox
 	touch $@
 
 ################################################################################
