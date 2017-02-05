@@ -16,23 +16,24 @@ NUM_JOBS ?=4
 # Optimize for size
 CFLAGS?=-Os
 
+## please note that this prevents options and extra flags from being passed to
+## the subdirectory targets, this can be usefull to debug why certain targets
+## are rebuild everytime without getting all the spam
+## TODO: debug why glibc is being reinstalled everytime
+#MAKE=make
+
 ################################################################################
 # Special Targets                                                              #
 ################################################################################
 
 .DEFAULT .PHONY: all
 all: qemu
-	# TODO: Implement
 
 .PHONY: clean
-clean: build_clean
-	# TODO: Implement
+clean:
+	rm -rf $(BUILD)/*
 	rm -rf $(SRC)/kernel
 	rm -rf $(SRC)/busybox
-
-.PHONY: build_clean
-build_clean:
-	rm -rf $(BUILD)/*
 
 .POHNY: qemu
 qemu: $(BUILD)/initrd.img $(BUILD)/bzImage
@@ -46,8 +47,8 @@ qemu: $(BUILD)/initrd.img $(BUILD)/bzImage
 
 # linux kernel
 
-LINUX_KERNEL_DOWNLOAD_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-4.9.8.tar.xz
-LINUX_KERNEL_DOWNLOAD_FILE=linux-4.9.8.tar.xz
+LINUX_KERNEL_DOWNLOAD_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-4.4.47.tar.xz
+LINUX_KERNEL_DOWNLOAD_FILE=linux-4.4.47.tar.xz
 
 $(SRC)/$(LINUX_KERNEL_DOWNLOAD_FILE):
 	rm -rf $@ && wget $(LINUX_KERNEL_DOWNLOAD_URL) -O $@
