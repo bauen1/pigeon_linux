@@ -1,8 +1,12 @@
 #!/bin/busybox ash
 
+# mount the core filesystems
 /bin/busybox mount -t proc /proc /proc
 /bin/busybox mount -t sysfs none /sys
 /bin/busybox mount -t devtmpfs none /dev
+
+# Create the nessecary directories to install busybox
+/bin/busybox mkdir -p /usr/bin /usr/sbin
 
 # install symlinks for all the applets
 /bin/busybox --install
@@ -14,9 +18,14 @@
 
 hostname "$HOSTNAME"
 
+export HOSTNAME=$HOSTNAME
+export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
+
 echo ""
 cat /etc/motd
 echo ""
 echo "Dropping you in a shell - have fun"
+echo ""
+
 
 exec /bin/busybox ash
