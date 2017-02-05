@@ -21,6 +21,14 @@ hostname "$HOSTNAME"
 export HOSTNAME=$HOSTNAME
 export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 
+echo "trying to bring up eth0 "
+
+ifconfig eth0 up
+
+echo "trying to obtain a dhcp lease"
+
+# TODO:
+
 echo ""
 cat /etc/motd
 echo ""

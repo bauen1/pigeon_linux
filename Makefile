@@ -210,7 +210,7 @@ $(BUILD)/initrd: $(BUILD)/busybox/busybox $(SRC)/initfs $(SRC)/initfs/init
 	# create needed directories if not already present
 	cd $@ ; mkdir -p bin boot dev lib mnt proc root sbin sys tmp usr
 	cd $@ ; ln -s lib lib64
-	cd $@/lib ; ln -s ../ x86_64-linux-gnu # FIXME:
+	cd $@/lib ; ln -s . x86_64-linux-gnu # FIXME:
 	# copy busybox in
 	cp $(BUILD)/busybox/busybox $@/bin/busybox
 	# copy the sysroot over (kernel headers and glibc libraries)
