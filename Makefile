@@ -109,6 +109,8 @@ $(BUILD)/install/linux/lib: $(BUILD)/linux/vmlinux
 	$(LINUX_KERNEL_MAKE) INSTALL_MOD_PATH=$(BUILD)/install/linux modules_install
 	$(LINUX_KERNEL_MAKE) INSTALL_FW_PATH=$(BUILD)/install/linux/lib/firmware firmware_install
 
+$(BUILD)/install/linux: $(BUILD)/install/linux/include $(BUILD)/install/linux/lib
+
 ################################################################################
 # glibc                                                                        #
 ################################################################################
@@ -130,8 +132,10 @@ $(BUILD)/glibc: $(BUILD)/glibc/Makefile
 $(BUILD)/install/glibc:
 	$(MAKE) -C $(BUILD)/glibc DESTDIR=$@ -j $(NUM_JOBS)
 
-$(BUILD)/prepared/glibc:
+# FIXME: this is actually our sysroot isn't it ?
+$(BUILD)/prepared/glibc: $(BUILD)/install/linux
 	mkdir -p $@ && rm -rf $@/*
+	cp -r $(BUILD)/install/linux/* $@/
 	cp -r $(BUILD)/install/glibc/* $@/
 	mkdir -p $@/usr
 	$(shell cd $@/usr \
@@ -159,7 +163,7 @@ $(BUILD)/busybox/.config: $(SRC)/busybox
 	#sed -i "s/.*CONFIG_SYSROOT.*/CONFIG_SYSROOT="$(GLIBC_PREPARED_ESCAPED)"/" $@
 
 
-$(BUILD)/busybox/busybox: $(BUILD)/busybox/.config
+$(BUILD)/busybox/busybox: $(BUILD)/busybox/.config $(BUILD)/prepared/glibc
 	$(MAKE) -C $(SRC)/busybox O=$(BUILD)/busybox all -j $(NUM_JOBS)
 
 ################################################################################
