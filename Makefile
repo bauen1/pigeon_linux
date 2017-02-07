@@ -2,7 +2,7 @@
 
 # BIG LIST OF TODO AND FIXME
 # 1. somewhat similar naming convention (src/kernel vs build/linux)
-#
+# 2. copying of glibc sysroot is somewhat broken
 
 ################################################################################
 # Variables                                                                    #
@@ -159,18 +159,13 @@ $(BUILD)/install/glibc: $(BUILD)/glibc
 # create a sysroot (headers and libraries)
 $(BUILD)/prepared/sysroot: $(BUILD)/install/linux $(BUILD)/install/glibc
 	mkdir -p $@ && rm -rf $@/*
-	cp -a $(BUILD)/install/linux/* $@/
-	cp -a $(BUILD)/install/glibc/* $@/
+	cp -dR --preserve=all $(BUILD)/install/linux/* $@/
+	cp -dR --preserve=all $(BUILD)/install/glibc/* $@/
 	mkdir -p $@/usr
 	# TODO: not sure if the commands below are needed
-	$(shell cd $@/usr \
-		ln -s ../include include \
-		ln -s ../lib lib )
-	$(shell cd $@/include \
-		ln -s $(BUILD)/install/linux/include/linux linux \
-		ln -s $(BUILD)/install/linux/include/asm asm \
-		ln -s $(BUILD)/install/linux/include/asm-generic asm-generic \
-		ln -s $(BUILD)/install/linux/include/mtd mtd )
+	cd $@/usr &&
+		ln -s ../include include &&
+		ln -s ../lib lib
 	touch $@
 
 ################################################################################
@@ -206,16 +201,20 @@ $(BUILD)/initrd.img: $(BUILD)/initrd
 	$(shell cd $< && find . | cpio -o -H newc | gzip > $@ )
 
 $(BUILD)/initrd: $(BUILD)/busybox/busybox $(SRC)/initfs $(SRC)/initfs/init
+	# TODO: the copying isn't really working
 	mkdir -p $@ && rm -rf $@/*
-	cp -a $(SRC)/initfs/* $@/
+	# create the important directories
+	cd $@ && mkdir -p bin dev lib lib64 mnt proc root sbin sys tmp usr usr/bin usr/sbin
+	# cp -dR --preserve=all
+	cp -dR --preserve=all$(SRC)/initfs/* $@/
 	# create needed directories if not already present
 	cd $@ && mkdir -p bin boot dev lib lib64 mnt proc root sbin sys tmp usr
 	# copy busybox in
-	cp $(BUILD)/busybox/busybox $@/bin/busybox
+	cp -dR --preserve=all $(BUILD)/busybox/busybox $@/bin/busybox
 	# copy the sysroot over (kernel headers and glibc libraries)
-	cp -a $(BUILD)/prepared/sysroot/* $@/
+	cp -dR --preserve=all $(BUILD)/prepared/sysroot/* $@/
 	# we need the linkers to be where they should be
-	cp $@/lib/ld-linux* $@/lib64
+	cp --preserve=all $@/lib/ld-linux* $@/lib64
 	#
 	touch $@
 
