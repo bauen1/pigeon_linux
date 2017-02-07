@@ -163,8 +163,8 @@ $(BUILD)/prepared/sysroot: $(BUILD)/install/linux $(BUILD)/install/glibc
 	cp -dR --preserve=all $(BUILD)/install/glibc/* $@/
 	mkdir -p $@/usr
 	# TODO: not sure if the commands below are needed
-	cd $@/usr &&
-		ln -s ../include include &&
+	cd $@/usr && \
+		ln -s ../include include && \
 		ln -s ../lib lib
 	touch $@
 
