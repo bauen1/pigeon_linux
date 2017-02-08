@@ -206,7 +206,7 @@ $(BUILD)/initrd: $(BUILD)/busybox/busybox $(SRC)/initfs $(SRC)/initfs/init
 	# create the important directories
 	cd $@ && mkdir -p bin dev lib lib64 mnt proc root sbin sys tmp usr usr/bin usr/sbin
 	# cp -dR --preserve=all
-	cp -dR --preserve=all$(SRC)/initfs/* $@/
+	cp -dR --preserve=all $(SRC)/initfs/* $@/
 	# create needed directories if not already present
 	cd $@ && mkdir -p bin boot dev lib lib64 mnt proc root sbin sys tmp usr
 	# copy busybox in
