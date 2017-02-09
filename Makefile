@@ -103,7 +103,7 @@ $(BUILD)/linux/.config: $(SRC)/kernel
 #	$(LINUX_KERNEL_MAKE) vmlinux
 
 # generate the kernel in the compressed self-extracting bzImage format
-$(BUILD)/linux/arch/x86/boot/bzImage: #$(BUILD)/linux/vmlinux
+$(BUILD)/linux/arch/x86/boot/bzImage: $(BUILD)/linux/.config #$(BUILD)/linux/vmlinux
 	$(LINUX_KERNEL_MAKE) bzImage
 
 # copy it (FIXME: move this)
@@ -111,13 +111,13 @@ $(BUILD)/bzImage: $(BUILD)/linux/arch/x86/boot/bzImage
 	cp $< $@
 
 # install the kernel headers
-$(BUILD)/install/linux/include: $(BUILD)/linux/vmlinux
+$(BUILD)/install/linux/include: $(BUILD)/linux/.config #$(BUILD)/linux/vmlinux
 	mkdir -p $(@D) && rm -rf $(@D)/*
 	$(LINUX_KERNEL_MAKE)  INSTALL_HDR_PATH=$(@D) headers_install
 	touch $@
 
 # install the kernel modules and firmware
-$(BUILD)/install/linux/lib: $(BUILD)/linux/vmlinux
+$(BUILD)/install/linux/lib: $(BUILD)/linux/.config #$(BUILD)/linux/vmlinux
 	mkdir -p $@ && rm -rf $@/* && mkdir -p $@/modules $@/firmware
 	$(LINUX_KERNEL_MAKE) modules
 	$(LINUX_KERNEL_MAKE) INSTALL_MOD_PATH=$(BUILD)/install/linux modules_install
@@ -203,7 +203,7 @@ $(BUILD)/busybox/busybox: $(BUILD)/busybox/.config $(BUILD)/prepared/sysroot
 $(BUILD)/initrd.img: $(BUILD)/initrd
 	$(shell cd $< && find . | cpio -o -H newc | gzip > $@ )
 
-$(BUILD)/initrd: $(BUILD)/busybox/busybox $(SRC)/initfs $(SRC)/initfs/init
+$(BUILD)/initrd: $(SRC)/initfs $(BUILD)/busybox/busybox $(BUILD)/prepared/sysroot $(SRC)/initfs/init
 	# TODO: the copying isn't really working
 	mkdir -p $@ && rm -rf $@/*
 	# create the important directories
