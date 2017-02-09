@@ -94,13 +94,16 @@ LINUX_KERNEL_MAKE=$(MAKE) -C $(SRC)/kernel O=$(BUILD)/linux -j $(NUM_JOBS)
 $(BUILD)/linux/.config: $(SRC)/kernel
 	mkdir -p $(@D) && rm -rf $(@D)/*
 	$(LINUX_KERNEL_MAKE) defconfig
+	# Enable VESA framebuffer support
+	cd $(@D) && sed -i "s/.*CONFIG_FB_VESA.*/CONFIG_FB_VESA=y/" .config
+	touch $@
 
-# generate the kernel in the vmlinux format
-$(BUILD)/linux/vmlinux: $(BUILD)/linux/.config
-	$(LINUX_KERNEL_MAKE) vmlinux
+## generate the kernel in the vmlinux format
+#$(BUILD)/linux/vmlinux: $(BUILD)/linux/.config
+#	$(LINUX_KERNEL_MAKE) vmlinux
 
 # generate the kernel in the compressed self-extracting bzImage format
-$(BUILD)/linux/arch/x86/boot/bzImage: $(BUILD)/linux/vmlinux
+$(BUILD)/linux/arch/x86/boot/bzImage: #$(BUILD)/linux/vmlinux
 	$(LINUX_KERNEL_MAKE) bzImage
 
 # copy it (FIXME: move this)
@@ -185,10 +188,10 @@ $(BUILD)/busybox/.config: $(SRC)/busybox $(BUILD)/prepared/sysroot
 	## For macOS, add '.bak' behind -i
 	## ( btw my congratulations if you compile this under macOS or BSD
 	## or something else than linux )
-	cd $(@D) ; sed -i 's/.*CONFIG_STATIC.*/CONFIG_STATIC=y/g' .config
+	#cd $(@D) && sed -i 's/.*CONFIG_STATIC.*/CONFIG_STATIC=y/g' .config
 	# dynamic linking rules!
 	##
-	cd $(@D) ; sed -i 's/.*CONFIG_SYSROOT.*/CONFIG_SYSROOT="$(SYSROOT_ESCAPED)"/g' .config
+	cd $(@D) && sed -i 's/.*CONFIG_SYSROOT.*/CONFIG_SYSROOT="$(SYSROOT_ESCAPED)"/g' .config
 
 $(BUILD)/busybox/busybox: $(BUILD)/busybox/.config $(BUILD)/prepared/sysroot
 	$(BUSYBOX_MAKE) all && touch $@
