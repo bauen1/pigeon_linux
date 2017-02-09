@@ -111,13 +111,13 @@ $(BUILD)/bzImage: $(BUILD)/linux/arch/x86/boot/bzImage
 	cp $< $@
 
 # install the kernel headers
-$(BUILD)/install/linux/include: $(BUILD)/linux/vmlinux
+$(BUILD)/install/linux/include: #$(BUILD)/linux/vmlinux
 	mkdir -p $(@D) && rm -rf $(@D)/*
 	$(LINUX_KERNEL_MAKE)  INSTALL_HDR_PATH=$(@D) headers_install
 	touch $@
 
 # install the kernel modules and firmware
-$(BUILD)/install/linux/lib: $(BUILD)/linux/vmlinux
+$(BUILD)/install/linux/lib: #$(BUILD)/linux/vmlinux
 	mkdir -p $@ && rm -rf $@/* && mkdir -p $@/modules $@/firmware
 	$(LINUX_KERNEL_MAKE) modules
 	$(LINUX_KERNEL_MAKE) INSTALL_MOD_PATH=$(BUILD)/install/linux modules_install
