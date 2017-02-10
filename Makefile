@@ -1,8 +1,9 @@
 #!/usr/bin/make -f
 
 # BIG LIST OF TODO AND FIXME
-# 1. somewhat similar naming convention (src/kernel vs build/linux)
-# 2. copying of glibc sysroot is somewhat broken
+# TODO: similar naming convention (src/kernel vs build/linux)
+# FIXME: copying of glibc sysroot is broken
+# FIXME: dynamically link busybox and actually make it work
 
 ################################################################################
 # Variables                                                                    #
@@ -13,9 +14,8 @@ BUILD ?=$(PWD)/build
 DOCS ?=$(PWD)/docs
 NUM_JOBS ?=4
 
-# Optimize for size, strip, disable stack smash protection (FIXME), protect
-# against bad implementations
-CFLAGS ?=-Os -s -fno-stack-protector -U_FORTIFY_SOURCE
+# Optimize for size, strip, protect against bad implementations
+CFLAGS ?=-Os -s -U_FORTIFY_SOURCE
 
 ################################################################################
 # Special Targets                                                              #
