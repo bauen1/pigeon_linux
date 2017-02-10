@@ -203,7 +203,7 @@ $(BUILD)/busybox/busybox: $(BUILD)/busybox/.config $(BUILD)/prepared/sysroot
 $(BUILD)/initrd.img: $(BUILD)/initrd
 	$(shell cd $< && find . | cpio -o -H newc | gzip > $@ )
 
-$(BUILD)/initrd: $(BUILD)/busybox/busybox $(SRC)/initfs $(SRC)/initfs/init
+$(BUILD)/initrd: $(SRC)/initfs $(BUILD)/busybox/busybox $(BUILD)/prepared/sysroot $(SRC)/initfs/init
 	# TODO: the copying isn't really working
 	mkdir -p $@ && rm -rf $@/*
 	# create the important directories
