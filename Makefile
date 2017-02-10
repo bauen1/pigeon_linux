@@ -33,10 +33,11 @@ clean:
 .POHNY: qemu
 qemu: $(BUILD)/initrd.img $(BUILD)/bzImage
 	# FIXME: there seems to be a bug that on the first run with a newly build
-	# initrd the kernel crashes due to acpi (for what ever reason)
+	# initrd the kernel crashes due to acpi (for what ever reason, i'm running
+	# qemu inside a virtualbox vm running debian 8 so that might be why )
 	sleep 3
 	-sync
-	qemu-system-x86_64 -initrd $(BUILD)/initrd.img -kernel $(BUILD)/bzImage
+	qemu-system-x86_64 -initrd $(BUILD)/initrd.img -kernel $(BUILD)/bzImage -append vga=ask
 
 qemu_serial: $(BUILD)/initrd.img $(BUILD)/bzImage
 	sleep 3
@@ -132,8 +133,6 @@ $(BUILD)/install/linux: $(BUILD)/install/linux/include $(BUILD)/install/linux/li
 # glibc                                                                        #
 ################################################################################
 
-GLIBC_CFLAGS="$(CFLAGS)"
-
 # configure glibc for compile
 $(BUILD)/glibc/Makefile: $(SRC)/glibc $(BUILD)/install/linux
 	mkdir -p $(@D) && rm -rf $(@D)/*
@@ -144,8 +143,7 @@ $(BUILD)/glibc/Makefile: $(SRC)/glibc $(BUILD)/install/linux
 		--without-gd \
 		--without-selinux \
 		--disable-werror \
-		CFLAGS=$(GLIBC_CFLAGS) && touch $@
-		# FIXME: what does the line above do ?
+		CFLAGS=$(CFLAGS) && touch $@
 
 # build glibc
 $(BUILD)/glibc: $(BUILD)/glibc/Makefile
@@ -159,8 +157,10 @@ $(BUILD)/install/glibc: $(BUILD)/glibc
 # sysroot                                                                      #
 ################################################################################
 
+SYSROOT=$(BUILD)/prepared/sysroot
+
 # create a sysroot (headers and libraries)
-$(BUILD)/prepared/sysroot: $(BUILD)/install/linux $(BUILD)/install/glibc
+$(SYSROOT): $(BUILD)/install/linux $(BUILD)/install/glibc
 	mkdir -p $@ && rm -rf $@/*
 	cp -dR --preserve=all $(BUILD)/install/linux/* $@/
 	cp -dR --preserve=all $(BUILD)/install/glibc/* $@/
@@ -176,7 +176,7 @@ $(BUILD)/prepared/sysroot: $(BUILD)/install/linux $(BUILD)/install/glibc
 ################################################################################
 
 # Escape / and \ because sed uses them for magic
-SYSROOT_ESCAPED=$(subst /,\/,$(subst \,\\,$(BUILD)/prepared/sysroot))
+SYSROOT_ESCAPED=$(subst /,\/,$(subst \,\\,$(SYSROOT)))
 
 # TODO: remove as many flags and recompile busybox to see which are actually needed
 
@@ -207,12 +207,10 @@ $(BUILD)/initrd.img: $(BUILD)/initrd
 $(BUILD)/initrd: $(SRC)/initfs $(BUILD)/busybox/busybox $(BUILD)/prepared/sysroot $(SRC)/initfs/init
 	# TODO: the copying isn't really working
 	mkdir -p $@ && rm -rf $@/*
-	# create the important directories
-	cd $@ && mkdir -p bin dev lib lib64 mnt proc root sbin sys tmp usr usr/bin usr/sbin
+	# create needed directories if not already present
+	cd $@ && mkdir -p bin boot dev lib lib64 mnt proc root sbin sys tmp usr usr/bin usr/sbin
 	# cp -dR --preserve=all
 	cp -dR --preserve=all $(SRC)/initfs/* $@/
-	# create needed directories if not already present
-	cd $@ && mkdir -p bin boot dev lib lib64 mnt proc root sbin sys tmp usr
 	# copy busybox in
 	cp -dR --preserve=all $(BUILD)/busybox/busybox $@/bin/busybox
 	# copy the sysroot over (kernel headers and glibc libraries)
