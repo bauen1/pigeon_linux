@@ -188,7 +188,8 @@ $(BUILD)/busybox/.config: $(SRC)/busybox $(BUILD)/prepared/sysroot
 	## For macOS, add '.bak' behind -i
 	## ( btw my congratulations if you compile this under macOS or BSD
 	## or something else than linux )
-	#cd $(@D) && sed -i 's/.*CONFIG_STATIC.*/CONFIG_STATIC=y/g' .config
+	# enable static linking for the time being FIXME: get this to work
+	cd $(@D) && sed -i 's/.*CONFIG_STATIC.*/CONFIG_STATIC=y/g' .config
 	# dynamic linking rules!
 	##
 	cd $(@D) && sed -i 's/.*CONFIG_SYSROOT.*/CONFIG_SYSROOT="$(SYSROOT_ESCAPED)"/g' .config
