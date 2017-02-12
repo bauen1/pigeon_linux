@@ -43,6 +43,7 @@ qemu_serial: $(BUILD)/initrd.img $(BUILD)/bzImage
 	sleep 3
 	-sync
 	qemu-system-x86_64 -initrd $(BUILD)/initrd.img -kernel $(BUILD)/bzImage -nographic -append console=ttyS0
+
 ################################################################################
 # Source downloading                                                           #
 ################################################################################
