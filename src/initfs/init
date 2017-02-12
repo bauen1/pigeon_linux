@@ -5,11 +5,12 @@
 /bin/busybox mount -t sysfs none /sys
 /bin/busybox mount -t devtmpfs none /dev
 
-# Create the nessecary directories to install busybox
-/bin/busybox mkdir -p /usr/bin /usr/sbin
-
 # install symlinks for all the applets
 /bin/busybox --install
+
+clear
+
+###
 
 # Grab the hostname from /etc/hostname if it exists
 [ -f /etc/hostname ] && HOSTNAME="$(cat /etc/hostname)"
@@ -19,7 +20,12 @@
 hostname "$HOSTNAME"
 
 export HOSTNAME=$HOSTNAME
+
+###
+
 export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
+
+###
 
 echo "trying to bring up eth0 "
 
@@ -27,13 +33,16 @@ ifconfig eth0 up
 
 echo "trying to obtain a dhcp lease"
 
-# TODO:
+# TODO: move the script
+udhcpc -t 5 -q -s /script.sh
 
-echo ""
+###
+
+echo -e "\e[97m"
 cat /etc/motd
 echo ""
 echo "Dropping you in a shell - have fun"
-echo ""
+echo -e "\e[0m"
 
 # Start a (job-controlling) shell
 exec setsid sh -c 'exec sh </dev/tty1 >/dev/tty1 2>&1'

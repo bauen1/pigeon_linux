@@ -99,10 +99,6 @@ $(BUILD)/linux/.config: $(SRC)/kernel
 	cd $(@D) && sed -i "s/.*CONFIG_FB_VESA.*/CONFIG_FB_VESA=y/" .config
 	touch $@
 
-## generate the kernel in the vmlinux format
-#$(BUILD)/linux/vmlinux: $(BUILD)/linux/.config
-#	$(LINUX_KERNEL_MAKE) vmlinux
-
 # generate the kernel in the compressed self-extracting bzImage format
 $(BUILD)/linux/arch/x86/boot/bzImage: $(BUILD)/linux/.config #$(BUILD)/linux/vmlinux
 	$(LINUX_KERNEL_MAKE) bzImage
@@ -111,14 +107,16 @@ $(BUILD)/linux/arch/x86/boot/bzImage: $(BUILD)/linux/.config #$(BUILD)/linux/vml
 $(BUILD)/bzImage: $(BUILD)/linux/arch/x86/boot/bzImage
 	cp $< $@
 
+###
+
 # install the kernel headers
-$(BUILD)/install/linux/include: $(BUILD)/linux/.config #$(BUILD)/linux/vmlinux
+$(BUILD)/install/linux/include: $(BUILD)/linux/.config
 	mkdir -p $(@D) && rm -rf $(@D)/*
 	$(LINUX_KERNEL_MAKE)  INSTALL_HDR_PATH=$(@D) headers_install
 	touch $@
 
 # install the kernel modules and firmware
-$(BUILD)/install/linux/lib: $(BUILD)/linux/.config #$(BUILD)/linux/vmlinux
+$(BUILD)/install/linux/lib: $(BUILD)/linux/.config
 	mkdir -p $@ && rm -rf $@/* && mkdir -p $@/modules $@/firmware
 	$(LINUX_KERNEL_MAKE) modules
 	$(LINUX_KERNEL_MAKE) INSTALL_MOD_PATH=$(BUILD)/install/linux modules_install
@@ -162,8 +160,8 @@ SYSROOT=$(BUILD)/prepared/sysroot
 # create a sysroot (headers and libraries)
 $(SYSROOT): $(BUILD)/install/linux $(BUILD)/install/glibc
 	mkdir -p $@ && rm -rf $@/*
-	cp -dR --preserve=all $(BUILD)/install/linux/* $@/
-	cp -dR --preserve=all $(BUILD)/install/glibc/* $@/
+	rsync -a $(BUILD)/install/linux/ $@/
+	rsync -a $(BUILD)/install/glibc/ $@/
 	mkdir -p $@/usr
 	# TODO: not sure if the commands below are needed
 	cd $@/usr && \
@@ -202,13 +200,14 @@ $(BUILD)/busybox/busybox: $(BUILD)/busybox/.config $(BUILD)/prepared/sysroot
 ################################################################################
 
 $(BUILD)/initrd.img: $(BUILD)/initrd
-	$(shell cd $< && find . | cpio -o -H newc | gzip > $@ )
+	# pack the initramfs and make everything be owned by root
+	$(shell cd $< && find . | cpio -o -H newc -R 0:0 | gzip > $@ )
 
 $(BUILD)/initrd: $(SRC)/initfs $(BUILD)/busybox/busybox $(BUILD)/prepared/sysroot $(SRC)/initfs/init
 	# TODO: the copying isn't really working
 	mkdir -p $@ && rm -rf $@/*
 	# create needed directories if not already present
-	cd $@ && mkdir -p bin boot dev lib lib64 mnt proc root sbin sys tmp usr usr/bin usr/sbin
+	cd $@ && mkdir -p bin boot dev etc lib lib64 mnt proc root sbin sys tmp usr usr/bin usr/sbin
 	# -a : copy everything (timestamps etc )
 	#
 	rsync -a $(SYSROOT)/ $@/
