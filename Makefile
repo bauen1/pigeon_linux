@@ -209,13 +209,12 @@ $(BUILD)/initrd: $(SRC)/initfs $(BUILD)/busybox/busybox $(BUILD)/prepared/sysroo
 	mkdir -p $@ && rm -rf $@/*
 	# create needed directories if not already present
 	cd $@ && mkdir -p bin boot dev lib lib64 mnt proc root sbin sys tmp usr usr/bin usr/sbin
-	# cp -dR --preserve=all
-	cp -dR --preserve=all $(SRC)/initfs/* $@/
-	# copy busybox in
-	cp -dR --preserve=all $(BUILD)/busybox/busybox $@/bin/busybox
-	# copy the sysroot over (kernel headers and glibc libraries)
-	cp -dR --preserve=all $(BUILD)/prepared/sysroot/* $@/
-	# we need the linkers to be where they should be
+	# -a : copy everything (timestamps etc )
+	#
+	rsync -a $(SYSROOT)/ $@/
+	rsync -a $(BUILD)/busybox/busybox $@/bin/busybox
+	rsync -a $(SRC)/initfs/ $@/
+	# TODO: this might need to be owned by 0:0
 	cp --preserve=all $@/lib/ld-linux* $@/lib64
 	#
 	touch $@
