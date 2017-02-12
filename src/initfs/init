@@ -5,6 +5,9 @@
 /bin/busybox mount -t sysfs none /sys
 /bin/busybox mount -t devtmpfs none /dev
 
+# create the directories needed for installation of the applets
+/bin/busybox mkdir -p /usr /usr/bin /usr/sbin
+
 # install symlinks for all the applets
 /bin/busybox --install
 
@@ -34,7 +37,7 @@ ifconfig eth0 up
 echo "trying to obtain a dhcp lease"
 
 # TODO: move the script
-udhcpc -t 5 -q -s /script.sh
+# udhcpc -t 5 -q -s /script.sh
 
 ###
 
