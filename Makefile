@@ -215,7 +215,8 @@ $(BUILD)/busybox/busybox: $(BUILD)/busybox/.config $(BUILD)/prepared/sysroot
 $(BUILD)/dpkg/Makefile: $(SRC)/dpkg
 	mkdir -p $(@D) && rm -rf $(@D)/*
 	cd "$(@D)" ; $(SRC)/dpkg/configure \
-		--prefix= \
+		--prefix=/usr \
+		--with-sysroot=$(SYSROOT) \
 		CFLAGS=$(CFLAGS) && touch $@
 
 $(BUILD)/dpkg: $(BUILD)/dpkg/Makefile
