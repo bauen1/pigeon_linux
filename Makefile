@@ -218,6 +218,11 @@ $(BUILD)/dpkg/Makefile: $(SRC)/dpkg $(BUILD)/prepared/sysroot
 	cd "$(@D)" ; $(SRC)/dpkg/configure \
 		--prefix=/usr \
 		--with-sysroot=$(SYSROOT) \
+		--without-libmd \
+		--without-libz \
+		--without-libbz2 \
+		--without-liblzma \
+		--without-selinux \
 		CFLAGS="$(CFLAGS)" && touch $@
 
 $(BUILD)/dpkg: $(BUILD)/dpkg/Makefile
