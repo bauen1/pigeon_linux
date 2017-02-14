@@ -62,6 +62,18 @@ $(SRC)/kernel: $(SRC)/$(LINUX_KERNEL_DOWNLOAD_FILE)
 	mkdir -p $@ && rm -rf $@/*
 	tar -xvf $< -C $@ --strip-components=1
 
+# glibc
+
+GLIBC_DOWNLOAD_FILE=glibc-2.19.tar.xz
+GLIBC_DOWNLOAD_URL=https://ftp.gnu.org/gnu/libc/$(GLIBC_DOWNLOAD_FILE)
+
+$(SRC)/$(GLIBC_DOWNLOAD_FILE):
+	rm -rf $@ && wget $(GLIBC_DOWNLOAD_URL) -O $@
+
+$(SRC)/glibc: $(SRC)/$(GLIBC_DOWNLOAD_FILE)
+	mkdir -p $@ && rm -rf $@/*
+	tar -xvf $< -C $@ --strip-components=1
+
 # busybox
 
 BUSYBOX_DOWNLOAD_FILE=busybox-1.22.0.tar.bz2
@@ -74,15 +86,15 @@ $(SRC)/busybox: $(SRC)/$(BUSYBOX_DOWNLOAD_FILE)
 	mkdir -p $@ && rm -rf $@/*
 	tar -xvf $< -C $@ --strip-components=1
 
-# glibc
+# dpkg
 
-GLIBC_DOWNLOAD_FILE=glibc-2.19.tar.xz
-GLIBC_DOWNLOAD_URL=https://ftp.gnu.org/gnu/libc/$(GLIBC_DOWNLOAD_FILE)
+DPKG_DOWNLOAD_FILE=dpkg_1.18.22.tar.xz
+DPKG_DOWNLOAD_URL=http://ftp.debian.org/debian/pool/main/d/dpkg/$(DPKG_DOWNLOAD_FILE)
 
-$(SRC)/$(GLIBC_DOWNLOAD_FILE):
-	rm -rf $@ && wget $(GLIBC_DOWNLOAD_URL) -O $@
+$(SRC)/$(DPKG_DOWNLOAD_FILE):
+	rm -rf $@ && wget $(DPKG_DOWNLOAD_URL) -O $@
 
-$(SRC)/glibc: $(SRC)/$(GLIBC_DOWNLOAD_FILE)
+$(SRC)/dpkg: $(SRC)/$(DPKG_DOWNLOAD_FILE)
 	mkdir -p $@ && rm -rf $@/*
 	tar -xvf $< -C $@ --strip-components=1
 
@@ -197,6 +209,19 @@ $(BUILD)/busybox/busybox: $(BUILD)/busybox/.config $(BUILD)/prepared/sysroot
 	$(BUSYBOX_MAKE) all && touch $@
 
 ################################################################################
+# dpkg                                                                         #
+################################################################################
+
+$(BUILD)/dpkg/Makefile: $(SRC)/dpkg
+	mkdir -p $(@D) && rm -rf $(@D)/*
+	cd "$(@D)" ; $(SRC)/dpkg/configure \
+		--prefix= \
+		CFLAGS=$(CFLAGS) && touch $@
+
+$(BUILD)/dpkg: $(BUILD)/dpkg/Makefile
+	$(MAKE) -C $(BUILD)/dpkg -j $(NUM_JOBS) && touch $@
+
+################################################################################
 # initrd.img                                                                   #
 ################################################################################
 
@@ -214,8 +239,8 @@ $(BUILD)/initrd: $(SRC)/initfs $(BUILD)/busybox/busybox $(BUILD)/prepared/sysroo
 	rsync -a $(SYSROOT)/ $@/
 	rsync -a $(BUILD)/busybox/busybox $@/bin/busybox
 	rsync -a $(SRC)/initfs/ $@/
-	# TODO: this might need to be owned by 0:0
-	cp --preserve=all $@/lib/ld-linux* $@/lib64
+	# copy the loader
+	cp --preserve=all $@/lib/ld* $@/lib64
 	#
 	touch $@
 

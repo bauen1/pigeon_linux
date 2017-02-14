@@ -7,6 +7,6 @@ build/*
 #!*/
 
 # Ignore source files that can be rebuild/extracted
-src/kernel
-src/busybox
-src/glibc
+src/*
+!src/initfs
+!src/*.tar.*
