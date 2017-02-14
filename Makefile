@@ -31,18 +31,18 @@ clean:
 	rm -rf $(SRC)/busybox
 
 .POHNY: qemu
-qemu: $(BUILD)/initrd.img $(BUILD)/bzImage
+qemu: $(BUILD)/initrd.img $(BUILD)/kernel
 	# FIXME: there seems to be a bug that on the first run with a newly build
 	# initrd the kernel crashes due to acpi (for what ever reason, i'm running
 	# qemu inside a virtualbox vm running debian 8 so that might be why )
 	sleep 3
 	-sync
-	qemu-system-x86_64 -initrd $(BUILD)/initrd.img -kernel $(BUILD)/bzImage -append vga=ask
+	qemu-system-x86_64 -initrd $(BUILD)/initrd.img -kernel $(BUILD)/kernel -append vga=ask
 
-qemu_serial: $(BUILD)/initrd.img $(BUILD)/bzImage
+qemu_serial: $(BUILD)/initrd.img $(BUILD)/kernel
 	sleep 3
 	-sync
-	qemu-system-x86_64 -initrd $(BUILD)/initrd.img -kernel $(BUILD)/bzImage -nographic -append console=ttyS0
+	qemu-system-x86_64 -initrd $(BUILD)/initrd.img -kernel $(BUILD)/kernel -nographic -append console=ttyS0
 
 ################################################################################
 # Source downloading                                                           #
@@ -116,8 +116,7 @@ $(BUILD)/linux/.config: $(SRC)/kernel
 $(BUILD)/linux/arch/x86/boot/bzImage: $(BUILD)/linux/.config #$(BUILD)/linux/vmlinux
 	$(LINUX_KERNEL_MAKE) bzImage
 
-# copy it (FIXME: move this)
-$(BUILD)/bzImage: $(BUILD)/linux/arch/x86/boot/bzImage
+$(BUILD)/kernel: $(BUILD)/linux/arch/x86/boot/bzImage
 	cp $< $@
 
 ###
@@ -151,9 +150,11 @@ $(BUILD)/glibc/Makefile: $(SRC)/glibc $(BUILD)/install/linux
 		--prefix= \
 		--with-headers="$(BUILD)/install/linux/include" \
 		--with-kernel=3.2.0 \
-		--without-gd \ # this is buggy
+		--without-gd \
 		--without-selinux \
 		--disable-werror \
+		--enable-add-ons \
+		--enable-stack-protector \
 		CFLAGS="$(CFLAGS)" && touch $@
 
 # build glibc
@@ -212,7 +213,7 @@ $(BUILD)/busybox/busybox: $(BUILD)/busybox/.config $(BUILD)/prepared/sysroot
 # dpkg                                                                         #
 ################################################################################
 
-$(BUILD)/dpkg/Makefile: $(SRC)/dpkg
+$(BUILD)/dpkg/Makefile: $(SRC)/dpkg $(BUILD)/prepared/sysroot
 	mkdir -p $(@D) && rm -rf $(@D)/*
 	cd "$(@D)" ; $(SRC)/dpkg/configure \
 		--prefix=/usr \
