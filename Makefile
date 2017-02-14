@@ -150,8 +150,8 @@ $(BUILD)/glibc/Makefile: $(SRC)/glibc $(BUILD)/install/linux
 	cd "$(@D)" ; $(SRC)/glibc/configure \
 		--prefix= \
 		--with-headers="$(BUILD)/install/linux/include" \
-		--with-kernel=4.0.0 \
-		--without-gd \
+		--with-kernel=3.2.0 \
+		--without-gd \ # this is buggy
 		--without-selinux \
 		--disable-werror \
 		CFLAGS=$(CFLAGS) && touch $@
