@@ -132,7 +132,7 @@ $(BUILD)/install/linux/lib: $(BUILD)/linux/.config
 	mkdir -p $@ && rm -rf $@/* && mkdir -p $@/modules $@/firmware
 	$(LINUX_KERNEL_MAKE) modules
 	$(LINUX_KERNEL_MAKE) INSTALL_MOD_PATH=$(BUILD)/install/linux modules_install
-	$(LINUX_KERNEL_MAKE) INSTALL_FW_PATH=$(BUILD)/install/linux/lib/firmware firmware_install
+	#$(LINUX_KERNEL_MAKE) INSTALL_FW_PATH=$(BUILD)/install/linux/lib/firmware firmware_install
 	touch $@
 
 #
@@ -259,6 +259,11 @@ $(BUILD)/initrd: $(BUILD)/install/dpkg $(SRC)/initfs $(BUILD)/busybox/busybox \
 	#
 	touch $@
 
+################################################################################
+# rootfs                                                                       #
+################################################################################
+
+$(BUILD)/rootfs:
 ################################################################################
 #                                                                              #
 ################################################################################
