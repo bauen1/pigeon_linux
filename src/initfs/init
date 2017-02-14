@@ -4,6 +4,8 @@
 /bin/busybox mount -t proc /proc /proc
 /bin/busybox mount -t sysfs none /sys
 /bin/busybox mount -t devtmpfs none /dev
+/bin/busybox mkdir -p /dev/pts
+/bin/busybox mount -t devpts devpts /dev/pts
 
 # create the directories needed for installation of the applets
 /bin/busybox mkdir -p /usr /usr/bin /usr/sbin
