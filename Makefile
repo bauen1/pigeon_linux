@@ -154,7 +154,7 @@ $(BUILD)/glibc/Makefile: $(SRC)/glibc $(BUILD)/install/linux
 		--without-gd \ # this is buggy
 		--without-selinux \
 		--disable-werror \
-		CFLAGS=$(CFLAGS) && touch $@
+		CFLAGS="$(CFLAGS)" && touch $@
 
 # build glibc
 $(BUILD)/glibc: $(BUILD)/glibc/Makefile
@@ -217,7 +217,7 @@ $(BUILD)/dpkg/Makefile: $(SRC)/dpkg
 	cd "$(@D)" ; $(SRC)/dpkg/configure \
 		--prefix=/usr \
 		--with-sysroot=$(SYSROOT) \
-		CFLAGS=$(CFLAGS) && touch $@
+		CFLAGS="$(CFLAGS)" && touch $@
 
 $(BUILD)/dpkg: $(BUILD)/dpkg/Makefile
 	$(MAKE) -C $(BUILD)/dpkg -j $(NUM_JOBS) && touch $@
