@@ -10,3 +10,4 @@ build/*
 src/*
 !src/initfs
 !src/*.tar.*
+!src/rootfs

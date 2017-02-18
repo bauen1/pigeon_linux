@@ -229,6 +229,7 @@ $(BUILD)/bash/Makefile: $(SRC)/bash
 	rm -rf $(@D) && mkdir -p $(@D)
 	cd "$(@D)" ; $(SRC)/bash/configure \
 		--with-sysroot=$(SYSROOT) \
+		--prefix=/ \
 		CFLAGS="$(CFLAGS)" && touch $@
 
 $(BUILD)/bash: $(BUILD)/bash/Makefile
@@ -282,10 +283,10 @@ $(BUILD)/initrd: $(BUILD)/install/dpkg $(SRC)/initfs $(BUILD)/busybox/busybox $(
 	cd $@ && mkdir -p bin boot dev etc lib lib64 mnt proc root sbin sys tmp usr usr/bin usr/sbin
 	@# -a : copy everything (timestamps etc )
 	@#
-	rsync -a $(SYSROOT)/ $@/
+	rsync -a $(SYSROOT)/* $@/
 	rsync -a $(BUILD)/install/dpkg $@/
 	rsync -a $(BUILD)/busybox/busybox $@/bin/busybox
-	rsync -a $(SRC)/initfs/ $@/
+	rsync -a $(SRC)/initfs/* $@/
 	# copy the loader
 	cp --preserve=all $@/lib/ld* $@/lib64
 	@#
