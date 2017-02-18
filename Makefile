@@ -188,11 +188,6 @@ $(SYSROOT): $(BUILD)/install/linux $(BUILD)/install/glibc
 	mkdir -p $@ && rm -rf $@/*
 	rsync -a $(BUILD)/install/linux/ $@/
 	rsync -a $(BUILD)/install/glibc/ $@/
-	mkdir -p $@/usr
-	# TODO: not sure if the commands below are needed
-	#cd $@/usr && \
-	#	ln -s ../include include && \
-	#	ln -s ../lib lib
 	touch $@
 
 ################################################################################
@@ -285,10 +280,11 @@ $(BUILD)/initrd: $(BUILD)/install/dpkg $(SRC)/initfs $(BUILD)/busybox/busybox $(
 	cd $@ && mkdir -p bin boot dev etc lib lib64 mnt proc root sbin sys tmp usr usr/bin usr/sbin
 	@# -a : copy everything (timestamps etc )
 	@#
-	rsync -a $(SYSROOT)/* $@/
-	rsync -a $(BUILD)/install/dpkg $@/
-	rsync -a $(BUILD)/busybox/busybox $@/bin/busybox
-	rsync -a $(SRC)/initfs/* $@/
+	rsync -a $(SYSROOT)/ $@/
+	rsync -a $(BUILD)/install/dpkg/ $@/
+	#rsync -a $(BUILD)/busybox/busybox $@/bin/busybox
+	cp --preserve=all $(BUILD)/busybox/busybox $@/bin/busybox
+	rsync -a $(SRC)/initfs/ $@/
 	# copy the loader
 	cp --preserve=all $@/lib/ld* $@/lib64
 	@#
