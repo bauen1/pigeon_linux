@@ -35,12 +35,12 @@ qemu: $(BUILD)/initrd.img $(BUILD)/kernel
 	# FIXME: there seems to be a bug that on the first run with a newly build
 	# initrd the kernel crashes due to acpi (for what ever reason, i'm running
 	# qemu inside a virtualbox vm running debian 8 so that might be why )
-	sleep 3
+	sleep 1
 	-sync
 	qemu-system-x86_64 -initrd $(BUILD)/initrd.img -kernel $(BUILD)/kernel -append vga=ask
 
 qemu_serial: $(BUILD)/initrd.img $(BUILD)/kernel
-	sleep 3
+	sleep 1
 	-sync
 	qemu-system-x86_64 -initrd $(BUILD)/initrd.img -kernel $(BUILD)/kernel -nographic -append console=ttyS0
 
@@ -190,9 +190,9 @@ $(SYSROOT): $(BUILD)/install/linux $(BUILD)/install/glibc
 	rsync -a $(BUILD)/install/glibc/ $@/
 	mkdir -p $@/usr
 	# TODO: not sure if the commands below are needed
-	cd $@/usr && \
-		ln -s ../include include && \
-		ln -s ../lib lib
+	#cd $@/usr && \
+	#	ln -s ../include include && \
+	#	ln -s ../lib lib
 	touch $@
 
 ################################################################################
@@ -270,17 +270,17 @@ $(BUILD)/initrd: $(BUILD)/install/dpkg $(SRC)/initfs $(BUILD)/busybox/busybox \
 		$(BUILD)/prepared/sysroot $(SRC)/initfs/init
 	# TODO: the copying isn't really working
 	mkdir -p $@ && rm -rf $@/*
-	# create needed directories if not already present
+	@# create needed directories if not already present
 	cd $@ && mkdir -p bin boot dev etc lib lib64 mnt proc root sbin sys tmp usr usr/bin usr/sbin
-	# -a : copy everything (timestamps etc )
-	#
+	@# -a : copy everything (timestamps etc )
+	@#
 	rsync -a $(SYSROOT)/ $@/
 	rsync -a $(BUILD)/install/dpkg $@/
 	rsync -a $(BUILD)/busybox/busybox $@/bin/busybox
 	rsync -a $(SRC)/initfs/ $@/
 	# copy the loader
 	cp --preserve=all $@/lib/ld* $@/lib64
-	#
+	@#
 	touch $@
 
 ################################################################################
