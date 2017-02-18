@@ -227,8 +227,12 @@ $(BUILD)/busybox/busybox: $(BUILD)/busybox/.config $(BUILD)/prepared/sysroot
 
 $(BUILD)/bash/Makefile: $(SRC)/bash
 	rm -rf $(@D) && mkdir -p $(@D)
-	cd "$(@D)" ; $(SRC)/bash/configure --help
-	@echo "TODO: implement"
+	cd "$(@D)" ; $(SRC)/bash/configure \
+		--with-sysroot=$(SYSROOT) \
+		CFLAGS="$(CFLAGS)" && touch $@
+
+$(BUILD)/bash: $(BUILD)/bash/Makefile
+	$(MAKE) -C $(BUILD)/bash -j $(NUM_JOBS) && touch $@
 
 $(BUILD)/install/bash: $(BUILD)/bash
 	$(MAKE) -C $(BUILD)/bash -j $(NUM_JOBS) DESTDIR=$@ install --prefix= && touch $@
