@@ -181,7 +181,7 @@ $(BUILD)/install/glibc: $(BUILD)/glibc
 # sysroot                                                                      #
 ################################################################################
 
-SYSROOT=$(BUILD)/prepared/sysroot
+SYSROOT=$(BUILD)/sysroot
 
 # create a sysroot (headers and libraries)
 $(SYSROOT): $(BUILD)/install/linux $(BUILD)/install/glibc
@@ -206,7 +206,7 @@ SYSROOT_ESCAPED=$(subst /,\/,$(subst \,\\,$(SYSROOT)))
 
 BUSYBOX_MAKE=$(MAKE) -C $(SRC)/busybox O=$(BUILD)/busybox -j $(NUM_JOBS) CFLAGS="$(CFLAGS) -fomit-frame-pointer"
 
-$(BUILD)/busybox/.config: $(SRC)/busybox $(BUILD)/prepared/sysroot
+$(BUILD)/busybox/.config: $(SRC)/busybox $(SYSROOT)
 	mkdir -p $(@D) && rm -rf $(@D)/*
 	$(BUSYBOX_MAKE) defconfig
 	## For macOS, add '.bak' behind -i
@@ -218,7 +218,7 @@ $(BUILD)/busybox/.config: $(SRC)/busybox $(BUILD)/prepared/sysroot
 	##
 	cd $(@D) && sed -i 's/.*CONFIG_SYSROOT.*/CONFIG_SYSROOT="$(SYSROOT_ESCAPED)"/g' .config
 
-$(BUILD)/busybox/busybox: $(BUILD)/busybox/.config $(BUILD)/prepared/sysroot
+$(BUILD)/busybox/busybox: $(BUILD)/busybox/.config $(SYSROOT)
 	$(BUSYBOX_MAKE) all && touch $@
 
 ################################################################################
@@ -242,7 +242,7 @@ $(BUILD)/install/bash: $(BUILD)/bash
 # dpkg                                                                         #
 ################################################################################
 
-$(BUILD)/dpkg/Makefile: $(SRC)/dpkg $(BUILD)/prepared/sysroot
+$(BUILD)/dpkg/Makefile: $(SRC)/dpkg $(SYSROOT)
 	mkdir -p $(@D) && rm -rf $(@D)/*
 	cd "$(@D)" ; $(SRC)/dpkg/configure \
 		--prefix=/usr \
@@ -267,6 +267,8 @@ $(BUILD)/install/dpkg: $(BUILD)/dpkg
 # rootfs                                                                       #
 ################################################################################
 
+$(BUILD)/rootfs:
+
 ################################################################################
 # initrd.img                                                                   #
 ################################################################################
@@ -276,7 +278,7 @@ $(BUILD)/initrd.img: $(BUILD)/initrd
 	$(shell cd $< && find . | cpio -o -H newc -R 0:0 | gzip > $@ )
 
 $(BUILD)/initrd: $(BUILD)/install/dpkg $(SRC)/initfs $(BUILD)/busybox/busybox $(BUILD)/install/bash \
-		$(BUILD)/prepared/sysroot $(SRC)/initfs/init
+		$(SYSROOT) $(SRC)/initfs/init
 	# TODO: the copying isn't really working
 	mkdir -p $@ && rm -rf $@/*
 	@# create needed directories if not already present
