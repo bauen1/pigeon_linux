@@ -235,7 +235,7 @@ $(BUILD)/bash: $(BUILD)/bash/Makefile
 	$(MAKE) -C $(BUILD)/bash -j $(NUM_JOBS) && touch $@
 
 $(BUILD)/install/bash: $(BUILD)/bash
-	$(MAKE) -C $(BUILD)/bash -j $(NUM_JOBS) DESTDIR=$@ install --prefix= && touch $@
+	$(MAKE) -C $(BUILD)/bash -j $(NUM_JOBS) DESTDIR=$@ install && touch $@
 
 ################################################################################
 # dpkg                                                                         #
@@ -263,6 +263,10 @@ $(BUILD)/install/dpkg: $(BUILD)/dpkg
 	$(MAKE) -C $(BUILD)/dpkg -j $(NUM_JOBS) DESTDIR=$@ install && touch $@
 
 ################################################################################
+# rootfs                                                                       #
+################################################################################
+
+################################################################################
 # initrd.img                                                                   #
 ################################################################################
 
@@ -270,7 +274,7 @@ $(BUILD)/initrd.img: $(BUILD)/initrd
 	# pack the initramfs and make everything be owned by root
 	$(shell cd $< && find . | cpio -o -H newc -R 0:0 | gzip > $@ )
 
-$(BUILD)/initrd: $(BUILD)/install/dpkg $(SRC)/initfs $(BUILD)/busybox/busybox \
+$(BUILD)/initrd: $(BUILD)/install/dpkg $(SRC)/initfs $(BUILD)/busybox/busybox $(BUILD)/install/bash \
 		$(BUILD)/prepared/sysroot $(SRC)/initfs/init
 	# TODO: the copying isn't really working
 	mkdir -p $@ && rm -rf $@/*
@@ -287,11 +291,6 @@ $(BUILD)/initrd: $(BUILD)/install/dpkg $(SRC)/initfs $(BUILD)/busybox/busybox \
 	@#
 	touch $@
 
-################################################################################
-# rootfs                                                                       #
-################################################################################
-
-$(BUILD)/rootfs:
 ################################################################################
 #                                                                              #
 ################################################################################
