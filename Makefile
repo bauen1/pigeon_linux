@@ -228,7 +228,7 @@ $(BUILD)/install/bash: $(BUILD)/bash
 
 # TODO: make this abstract again
 $(BUILD)/ports/filesystem-1.0.pkg.tar.xz: $(SRC)/ports/filesystem
-	rm -rf $@ && export PKGDEST=$(@D) && cd $< && makepkg
+	rm -rf $@ && mkdir -p $(@D) && export PKGDEST=$(@D) && cd $< && makepkg
 
 ################################################################################
 # rootfs                                                                       #
@@ -237,6 +237,8 @@ $(BUILD)/ports/filesystem-1.0.pkg.tar.xz: $(SRC)/ports/filesystem
 $(BUILD)/rootfs: $(SRC)/rootfs $(BUILD)/busybox/busybox $(SYSROOT)
 	rm -rf $@ && mkdir -p $@
 	rsync -a $(SYSROOT)/ $@/
+	# setup some temporary stuff for pacman
+	fakeroot /bin/sh -c 'mkdir -m 0755 -p $@/var/{cache/pacman/pkg,lib/pacman,log}'
 	fakeroot /bin/sh -c 'pacman --root "$@" -U $(BUILD)/ports/filesystem-1.0.pkg.tar.xz'
 	cp --preserve=all $(BUILD)/busybox/busybox $@/bin/busybox
 	rsync -a $(SRC)/rootfs/ $@/
