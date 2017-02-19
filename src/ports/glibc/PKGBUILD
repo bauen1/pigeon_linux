@@ -1,0 +1,79 @@
+# Description:
+# URL:
+# Maintainer:
+
+pkgname=glibc
+pkgver=2.25
+pkgrel=1
+_commit=58520986c38e34db60e07260c64c563e3efcf353
+pkgdesc="GNU C Library"
+arch=('i686' 'x86_64')
+url="http://www.gnu.org/software/libc"
+license=('GPL' 'LPGL')
+group=('core')
+depends=('linux-headers>=4.5' 'filesystem')
+makedepends=('gcc>=6' 'git')
+#backup=('')
+options=('!strip' 'staticlibs')
+#install=glibc.install
+source=(git+https://sourceware.org/git/glibc.git#commit=${_commit})
+md5sums=('SKIP')
+
+prepare() {
+  mkdir build
+}
+
+build() {
+  cd build
+
+  CPPFLAGS=${CPPFLAGS/-D_FORTIFY_SOURCE=2/}
+
+  ../${pkgname}/configure \
+    --prefix=/usr \
+    --libdir=/usr/lib \
+    --libexecdir=/usr/lib \
+    --with-headers=/usr/include \
+    --with-bugurl=https://github.com/bauen1/pigeon_linux \
+    --enable-add-ons \
+    --enable-obsolete-rpc \
+    --enable-kernel=2.6.32 \
+    --enable-bind-now \
+    --disable-profile \
+    --enable-stackguard-randomization \
+    --enable-stack-protector=strong \
+    --enable-lock-elision \
+    --enable-multi-arch \
+    --disable-werror
+
+  make
+}
+
+check() {
+  cd build
+  make check || true
+}
+
+package() {
+  cd build
+
+  install -d -m755 "${pkgdir}/etc"
+  touch "${pkgdir}/etc/ld.so.conf"
+
+  make install_root=${pkgdir} install
+
+  #cd "${pkgdir}"
+  #strip $STRIP_BINARIES usr/bin/{gencat,getconf,getent,iconv,iconvconfig} \
+  #                      usr/bin/{ldconfig,locale,localedef,nscd,makedb} \
+  #                      usr/bin/{pcprofiledump,pldd,rpcgen,sln,sprof} \
+  #                      usr/lib/getconf/*
+
+  #strip $STRIP_STATIC usr/lib/lib{anl,BrokenLocale,c{,_nonshared},crypt}.a \
+  #                  usr/lib/lib{dl,g,ieee,m-${pkgver},mcheck,mvec{,_nonshared}}.a \
+  #                  usr/lib/lib{nsl,pthread{,_nonshared},resolv,rpcsvc,rt,util}.a
+
+  #strip $STRIP_SHARED usr/lib/lib{anl,BrokenLocale,cidn,crypt}-*.so \
+  #                    usr/lib/libnss_{compat,db,dns,files,hesiod,nis,nisplus}-*.so \
+  #                    usr/lib/lib{dl,m,nsl,resolv,rt,util}-*.so \
+  #                    usr/lib/lib{memusage,pcprofile,SegFault}.so \
+  #                    usr/lib/{audit,gconv}/*.so || true
+}
