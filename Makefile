@@ -44,38 +44,46 @@ qemu_serial: $(BUILD)/initrd.img $(BUILD)/kernel
 # ports                                                                        #
 ################################################################################
 
+# FIXME:
+PORTS_ROOT=$(BUILD)/rootfs
+
 # TODO: make this abstract again
 # Please note that dependencys must be resolved manually
 
 BUILD_PORTS=$(BUILD)/ports
 SRC_PORTS=$(SRC)/ports
-STANDARD_PORT_BUILD=rm -rf $@ && mkdir -p $(@D) && rsync -a $</ $(@D)/ \
-	&& cd $(@D) && export PACMAN="pacman --root $@" && makepkg
+define standard_port_build
+	# prepare the ports root if not already done
+	fakeroot /bin/sh -c 'mkdir -m 0755 -p $(PORTS_ROOT)/var/{cache/pacman/pkg,lib/pacman,log}'
+	rm -rf $@ && mkdir -p $(@D) && rsync -a $</ $(@D)/ && \
+		cd $(@D) && export PACMAN='pacman' && makepkg
+endef
 
 $(BUILD_PORTS)/filesystem/filesystem-1.0.pkg.tar.xz: $(SRC_PORTS)/filesystem
-	$(STANDARD_PORT_BUILD)
+	$(call standard_port_build)
 
 $(BUILD_PORTS)/linux/linux-4.8.9.pkg.tar.xz: $(SRC_PORTS)/linux
-	$(STANDARD_PORT_BUILD)
+	$(call standard_port_build)
 
 $(BUILD_PORTS)/glibc/glibc-2.25.pkg.tar.xz: $(SRC_PORTS)/glibc
-	$(STANDARD_PORT_BUILD)
+	$(call standard_port_build)
 
 $(BUILD_PORTS)/busybox/busybox-1.26.2.pkg.tar.xz: $(SRC_PORTS)/busybox
-	$(STANDARD_PORT_BUILD)
+	$(call standard_port_build)
 
 ################################################################################
 # rootfs                                                                       #
 ################################################################################
 
 define install_port
-	fakeroot /bin/sh -c 'pacman --rot "$@" -U $(BUILD_PORTS)/$(1)/$(1)-$(2).pkg.tar.xz'
+	fakeroot /bin/sh -c 'pacman --root "$@" -U $(BUILD_PORTS)/$(1)/$(1)-$(2).pkg.tar.xz'
 endef
 
 $(BUILD)/rootfs: $(SRC)/rootfs \
 		$(BUILD_PORTS)/filesystem/filesystem-1.0.pkg.tar.xz \
 		$(BUILD_PORTS)/linux/linux-4.8.9.pkg.tar.xz \
-		$(BUILD_PORTS)/
+		$(BUILD_PORTS)/glibc/glibc-2.25.pkg.tar.xz \
+		$(BUILD_PORTS)/busybox/busybox-1.26.2.pkg.tar.xz
 	rm -rf $@ && mkdir -p $@
 	# setup some temporary stuff for pacman
 	fakeroot /bin/sh -c 'mkdir -m 0755 -p $@/var/{cache/pacman/pkg,lib/pacman,log}'
