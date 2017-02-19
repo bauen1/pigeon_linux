@@ -227,8 +227,8 @@ $(BUILD)/install/bash: $(BUILD)/bash
 ################################################################################
 
 # TODO: make this abstract again
-$(BUILD)/ports/filesystem-1.0.pkg.tar.xz: $(SRC)/ports/filesystem
-	rm -rf $@ && mkdir -p $(@D) && export PKGDEST=$(@D) && cd $< && makepkg
+$(BUILD)/ports/filesystem/filesystem-1.0.pkg.tar.xz: $(SRC)/ports/filesystem
+	rm -rf $@ && mkdir -p $(@D) && rsync --preserve=all $</ $(@D)/ && cd $(@D) && makepkg
 
 ################################################################################
 # rootfs                                                                       #
