@@ -1,0 +1,25 @@
+pkgname=busybox
+pkgver=1.26.2
+pkgrel=1
+pkgdesc="A statically linked busybox"
+arch=('x86_64')
+url="http://busybox.net/"
+license=('GPL')
+depends=('glibc')
+options=('!buildflags')
+source=(http://busybox.net/downloads/busybox-$pkgver.tar.bz2)
+sha256sums=('SKIP')
+
+prepare() {
+  cd "busybox-$pkgver"
+  make defconfig
+  sed -i 's/.*CONFIG_STATIC.*/CONFIG_STATIC=y/g' .config
+}
+
+build() {
+  make -C "busybox-$pkgver"
+}
+
+package() {
+  install -d -m755 "$srcdir/busybox-$pkgver/busybox" "$pkgdir/bin/busybox"
+}
