@@ -2,8 +2,6 @@
 
 # BIG LIST OF TODO AND FIXME
 # TODO: similar naming convention (src/kernel vs build/linux)
-# FIXME: copying of glibc sysroot is broken
-# FIXME: dynamically link busybox and actually make it work
 
 ################################################################################
 # Variables                                                                    #
@@ -27,8 +25,6 @@ all: qemu
 .PHONY: clean
 clean:
 	rm -rf $(BUILD)/*
-	rm -rf $(SRC)/kernel
-	rm -rf $(SRC)/busybox
 
 .POHNY: qemu
 qemu: $(BUILD)/initrd.img $(BUILD)/kernel
@@ -45,173 +41,50 @@ qemu_serial: $(BUILD)/initrd.img $(BUILD)/kernel
 	qemu-system-x86_64 -initrd $(BUILD)/initrd.img -kernel $(BUILD)/kernel -nographic -append console=ttyS0
 
 ################################################################################
-# Source downloading                                                           #
-################################################################################
-
-# TODO: Macros / Functions to make somewhat more readable code
-
-# linux kernel
-
-LINUX_KERNEL_DOWNLOAD_FILE=linux-4.9.8.tar.xz
-LINUX_KERNEL_DOWNLOAD_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/$(LINUX_KERNEL_DOWNLOAD_FILE)
-
-$(SRC)/$(LINUX_KERNEL_DOWNLOAD_FILE):
-	rm -rf $@ && wget $(LINUX_KERNEL_DOWNLOAD_URL) -O $@
-
-$(SRC)/kernel: $(SRC)/$(LINUX_KERNEL_DOWNLOAD_FILE)
-	mkdir -p $@ && rm -rf $@/*
-	tar -xvf $< -C $@ --strip-components=1
-
-# glibc
-
-GLIBC_DOWNLOAD_FILE=glibc-2.19.tar.xz
-GLIBC_DOWNLOAD_URL=https://ftp.gnu.org/gnu/libc/$(GLIBC_DOWNLOAD_FILE)
-
-$(SRC)/$(GLIBC_DOWNLOAD_FILE):
-	rm -rf $@ && wget $(GLIBC_DOWNLOAD_URL) -O $@
-
-$(SRC)/glibc: $(SRC)/$(GLIBC_DOWNLOAD_FILE)
-	mkdir -p $@ && rm -rf $@/*
-	tar -xvf $< -C $@ --strip-components=1
-
-# busybox
-
-BUSYBOX_DOWNLOAD_FILE=busybox-1.22.0.tar.bz2
-BUSYBOX_DOWNLOAD_URL=http://busybox.net/downloads/$(BUSYBOX_DOWNLOAD_FILE)
-
-$(SRC)/$(BUSYBOX_DOWNLOAD_FILE):
-	rm -rf $@ && wget $(BUSYBOX_DOWNLOAD_URL) -O $@
-
-$(SRC)/busybox: $(SRC)/$(BUSYBOX_DOWNLOAD_FILE)
-	mkdir -p $@ && rm -rf $@/*
-	tar -xvf $< -C $@ --strip-components=1
-
-################################################################################
-# Linux kernel                                                                 #
-################################################################################
-
-LINUX_KERNEL_MAKE=$(MAKE) -C $(SRC)/kernel O=$(BUILD)/linux -j $(NUM_JOBS)
-
-# Generate the default config for the kernel
-$(BUILD)/linux/.config: $(SRC)/kernel
-	mkdir -p $(@D) && rm -rf $(@D)/*
-	$(LINUX_KERNEL_MAKE) defconfig
-	# Enable VESA framebuffer support
-	cd $(@D) && sed -i "s/.*CONFIG_FB_VESA.*/CONFIG_FB_VESA=y/" .config
-	touch $@
-
-# generate the kernel in the compressed self-extracting bzImage format
-$(BUILD)/linux/arch/x86/boot/bzImage: $(BUILD)/linux/.config #$(BUILD)/linux/vmlinux
-	$(LINUX_KERNEL_MAKE) bzImage
-
-$(BUILD)/kernel: $(BUILD)/linux/arch/x86/boot/bzImage
-	cp $< $@
-
-###
-
-# install the kernel headers
-$(BUILD)/install/linux/include: $(BUILD)/linux/.config
-	mkdir -p $(@D) && rm -rf $(@D)/*
-	$(LINUX_KERNEL_MAKE)  INSTALL_HDR_PATH=$(@D) headers_install
-	touch $@
-
-# install the kernel modules and firmware
-$(BUILD)/install/linux/lib: $(BUILD)/linux/.config
-	mkdir -p $@ && rm -rf $@/* && mkdir -p $@/modules $@/firmware
-	$(LINUX_KERNEL_MAKE) modules
-	$(LINUX_KERNEL_MAKE) INSTALL_MOD_PATH=$(BUILD)/install/linux modules_install
-	#$(LINUX_KERNEL_MAKE) INSTALL_FW_PATH=$(BUILD)/install/linux/lib/firmware firmware_install
-	touch $@
-
-#
-$(BUILD)/install/linux: $(BUILD)/install/linux/include $(BUILD)/install/linux/lib
-	touch $@
-
-################################################################################
-# glibc                                                                        #
-################################################################################
-
-# configure glibc for compile
-$(BUILD)/glibc/Makefile: $(SRC)/glibc $(BUILD)/install/linux
-	mkdir -p $(@D) && rm -rf $(@D)/*
-	cd "$(@D)" ; $(SRC)/glibc/configure \
-		--prefix= \
-		--with-headers="$(BUILD)/install/linux/include" \
-		--with-kernel=3.2.0 \
-		--without-gd \
-		--without-selinux \
-		--disable-werror \
-		--enable-add-ons \
-		--enable-stack-protector \
-		CFLAGS="$(CFLAGS)" && touch $@
-
-# build glibc
-$(BUILD)/glibc: $(BUILD)/glibc/Makefile
-	$(MAKE) -C $(BUILD)/glibc -j $(NUM_JOBS) && touch $@
-
-# install glibc
-$(BUILD)/install/glibc: $(BUILD)/glibc
-	$(MAKE) -C $(BUILD)/glibc DESTDIR=$@ install -j $(NUM_JOBS) && touch $@
-
-################################################################################
-# sysroot                                                                      #
-################################################################################
-
-SYSROOT=$(BUILD)/sysroot
-
-# create a sysroot (headers and libraries)
-$(SYSROOT): $(BUILD)/install/linux $(BUILD)/install/glibc
-	mkdir -p $@ && rm -rf $@/*
-	rsync -a $(BUILD)/install/linux/ $@/
-	rsync -a $(BUILD)/install/glibc/ $@/
-	touch $@
-
-################################################################################
-# busybox                                                                      #
-################################################################################
-
-# Escape / and \ because sed uses them for magic
-SYSROOT_ESCAPED=$(subst /,\/,$(subst \,\\,$(SYSROOT)))
-
-# TODO: remove as many flags and recompile busybox to see which are actually needed
-
-BUSYBOX_MAKE=$(MAKE) -C $(SRC)/busybox O=$(BUILD)/busybox -j $(NUM_JOBS) CFLAGS="$(CFLAGS) -fomit-frame-pointer"
-
-$(BUILD)/busybox/.config: $(SRC)/busybox $(SYSROOT)
-	mkdir -p $(@D) && rm -rf $(@D)/*
-	$(BUSYBOX_MAKE) defconfig
-	## For macOS, add '.bak' behind -i
-	## ( btw my congratulations if you compile this under macOS or BSD
-	## or something else than linux )
-	# enable static linking for the time being FIXME: get this to work
-	cd $(@D) && sed -i 's/.*CONFIG_STATIC.*/CONFIG_STATIC=y/g' .config
-	# dynamic linking rules!
-	##
-	cd $(@D) && sed -i 's/.*CONFIG_SYSROOT.*/CONFIG_SYSROOT="$(SYSROOT_ESCAPED)"/g' .config
-
-$(BUILD)/busybox/busybox: $(BUILD)/busybox/.config $(SYSROOT)
-	$(BUSYBOX_MAKE) all && touch $@
-
-################################################################################
 # ports                                                                        #
 ################################################################################
 
 # TODO: make this abstract again
-$(BUILD)/ports/filesystem/filesystem-1.0.pkg.tar.xz: $(SRC)/ports/filesystem
-	rm -rf $@ && mkdir -p $(@D) && rsync --preserve=all $</ $(@D)/ && cd $(@D) && makepkg
+# Please note that dependencys must be resolved manually
+
+BUILD_PORTS=$(BUILD)/ports
+SRC_PORTS=$(SRC)/ports
+STANDARD_PORT_BUILD=rm -rf $@ && mkdir -p $(@D) && rsync -a $</ $(@D)/ \
+	&& cd $(@D) && export PACMAN="pacman --root $@" && makepkg
+
+$(BUILD_PORTS)/filesystem/filesystem-1.0.pkg.tar.xz: $(SRC_PORTS)/filesystem
+	$(STANDARD_PORT_BUILD)
+
+$(BUILD_PORTS)/linux/linux-4.8.9.pkg.tar.xz: $(SRC_PORTS)/linux
+	$(STANDARD_PORT_BUILD)
+
+$(BUILD_PORTS)/glibc/glibc-2.25.pkg.tar.xz: $(SRC_PORTS)/glibc
+	$(STANDARD_PORT_BUILD)
+
+$(BUILD_PORTS)/busybox/busybox-1.26.2.pkg.tar.xz: $(SRC_PORTS)/busybox
+	$(STANDARD_PORT_BUILD)
 
 ################################################################################
 # rootfs                                                                       #
 ################################################################################
 
-$(BUILD)/rootfs: $(SRC)/rootfs $(BUILD)/busybox/busybox $(SYSROOT) \
-		$(BUILD)/ports/filesystem/filesystem-1.0.pkg.tar.xz
+define install_port
+	fakeroot /bin/sh -c 'pacman --rot "$@" -U $(BUILD_PORTS)/$(1)/$(1)-$(2).pkg.tar.xz'
+endef
+
+$(BUILD)/rootfs: $(SRC)/rootfs \
+		$(BUILD_PORTS)/filesystem/filesystem-1.0.pkg.tar.xz \
+		$(BUILD_PORTS)/linux/linux-4.8.9.pkg.tar.xz \
+		$(BUILD_PORTS)/
 	rm -rf $@ && mkdir -p $@
-	rsync -a $(SYSROOT)/ $@/
 	# setup some temporary stuff for pacman
 	fakeroot /bin/sh -c 'mkdir -m 0755 -p $@/var/{cache/pacman/pkg,lib/pacman,log}'
-	fakeroot /bin/sh -c 'pacman --root "$@" -U $(BUILD)/ports/filesystem-1.0.pkg.tar.xz'
-	cp --preserve=all $(BUILD)/busybox/busybox $@/bin/busybox
+	#fakeroot /bin/sh -c 'pacman --root "$@" -U $(BUILD)/ports/filesystem-1.0.pkg.tar.xz'
+	#fakeroot /bin
+	$(call install_port,filesystem,1.0)
+	$(call install_port,linux,4.8.9)
+	$(call install_port,glibc,2.25)
+	$(call install_port,busybox,1.26.2)
 	rsync -a $(SRC)/rootfs/ $@/
 	touch $@
 
