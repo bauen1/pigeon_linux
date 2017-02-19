@@ -223,16 +223,23 @@ $(BUILD)/install/bash: $(BUILD)/bash
 
 
 ################################################################################
-# filesystem port                                                              #
+# ports                                                                        #
 ################################################################################
 
-# TODO: abstract this to build all ports
+$(BUILD)/ports/%.pkg.tar.xz: $(SRC)/ports/%
+	rm -rf $@ && export PKGDEST=$(@D) && cd $< && makepkg
 
 ################################################################################
 # rootfs                                                                       #
 ################################################################################
 
-$(BUILD)/rootfs:
+$(BUILD)/rootfs: $(SRC)/rootfs $(BUILD)/busybox/busybox $(SYSROOT)
+	rm -rf $@ && mkdir -p $@
+	pacman --roth "$@" -U $(BUILD)/ports/filesystem-1.0.pkg.tar.xz
+	rsync -a $(SYSROOT)/ $@/
+	cp --preserve=all $(BUILD)/busybox/busybox $@/bin/busybox
+	rsync -a $(SRC)/rootfs/ $@/
+	touch $@
 
 ################################################################################
 # initrd.img                                                                   #
@@ -242,21 +249,10 @@ $(BUILD)/initrd.img: $(BUILD)/initrd
 	# pack the initramfs and make everything be owned by root
 	$(shell cd $< && find . | cpio -o -H newc -R 0:0 | gzip > $@ )
 
-$(BUILD)/initrd: $(SRC)/initfs $(BUILD)/busybox/busybox $(BUILD)/install/bash \
-		$(SYSROOT) $(SRC)/initfs/init
-	# TODO: the copying isn't really working
-	mkdir -p $@ && rm -rf $@/*
-	@# create needed directories if not already present
-	cd $@ && mkdir -p bin boot dev etc lib lib64 mnt proc root sbin sys tmp usr usr/bin usr/sbin
-	@# -a : copy everything (timestamps etc )
-	@#
-	rsync -a $(SYSROOT)/ $@/
-	#rsync -a $(BUILD)/busybox/busybox $@/bin/busybox
-	cp --preserve=all $(BUILD)/busybox/busybox $@/bin/busybox
-	rsync -a $(SRC)/initfs/ $@/
-	# copy the loader
-	cp --preserve=all $@/lib/ld* $@/lib64
-	@#
+$(BUILD)/initrd: $(BUILD)/rootfs $(SRC)/initfs/init
+	rm -rf $@ && mkdir -p $@
+	rsync -a $(BUILD)/rootfs/ $@/
+	cp --preserve=all $(SRC)/initfs/init
 	touch $@
 
 ################################################################################
