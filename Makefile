@@ -235,7 +235,7 @@ $(BUILD)/ports/%.pkg.tar.xz: $(SRC)/ports/%
 
 $(BUILD)/rootfs: $(SRC)/rootfs $(BUILD)/busybox/busybox $(SYSROOT)
 	rm -rf $@ && mkdir -p $@
-	pacman --roth "$@" -U $(BUILD)/ports/filesystem-1.0.pkg.tar.xz
+	pacman --root "$@" -U $(BUILD)/ports/filesystem-1.0.pkg.tar.xz
 	rsync -a $(SYSROOT)/ $@/
 	cp --preserve=all $(BUILD)/busybox/busybox $@/bin/busybox
 	rsync -a $(SRC)/rootfs/ $@/
