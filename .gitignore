@@ -11,3 +11,4 @@ src/*
 !src/initfs
 !src/*.tar.*
 !src/rootfs
+!src/ports
