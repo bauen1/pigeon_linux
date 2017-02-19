@@ -56,7 +56,7 @@ define standard_port_build
 	# prepare the ports root if not already done
 	fakeroot /bin/sh -c 'mkdir -m 0755 -p $(PORTS_ROOT)/var/{cache/pacman/pkg,lib/pacman,log}'
 	rm -rf $@ && mkdir -p $(@D) && rsync -a $</ $(@D)/ && \
-		cd $(@D) && export PACMAN='pacman --root "$(PORTS_ROOT)" ' && makepkg
+		cd $(@D) && export PACMAN='pacman' && makepkg
 endef
 
 $(BUILD_PORTS)/filesystem/filesystem-1.0.pkg.tar.xz: $(SRC_PORTS)/filesystem
