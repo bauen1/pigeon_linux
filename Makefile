@@ -98,18 +98,6 @@ $(SRC)/bash: $(SRC)/$(BASH_DOWNLOAD_FILE)
 	mkdir -p $@ && rm -rf $@/*
 	tar -xvf $< -C $@ --strip-components=1
 
-# dpkg
-
-DPKG_DOWNLOAD_FILE=dpkg_1.18.22.tar.xz
-DPKG_DOWNLOAD_URL=http://ftp.debian.org/debian/pool/main/d/dpkg/$(DPKG_DOWNLOAD_FILE)
-
-$(SRC)/$(DPKG_DOWNLOAD_FILE):
-	rm -rf $@ && wget $(DPKG_DOWNLOAD_URL) -O $@
-
-$(SRC)/dpkg: $(SRC)/$(DPKG_DOWNLOAD_FILE)
-	mkdir -p $@ && rm -rf $@/*
-	tar -xvf $< -C $@ --strip-components=1
-
 ################################################################################
 # Linux kernel                                                                 #
 ################################################################################
@@ -234,35 +222,11 @@ $(BUILD)/install/bash: $(BUILD)/bash
 	$(MAKE) -C $(BUILD)/bash -j $(NUM_JOBS) DESTDIR=$@ install && touch $@
 
 ################################################################################
-# dpkg                                                                         #
-################################################################################
-
-$(BUILD)/dpkg/Makefile: $(SRC)/dpkg $(SYSROOT)
-	mkdir -p $(@D) && rm -rf $(@D)/*
-	cd "$(@D)" ; $(SRC)/dpkg/configure \
-		--prefix=/usr \
-		--with-sysroot=$(SYSROOT) \
-		--without-libmd \
-		--without-libz \
-		--without-libbz2 \
-		--without-liblzma \
-		--without-selinux \
-		CFLAGS="$(CFLAGS)" && touch $@
-		# Please note that dpkg might depend on features of gzip / bz2 / xz that
-		# aren't included in busybox
-		# TODO: build lib* for dpkg
-
-$(BUILD)/dpkg: $(BUILD)/dpkg/Makefile
-	$(MAKE) -C $(BUILD)/dpkg -j $(NUM_JOBS) && touch $@
-
-$(BUILD)/install/dpkg: $(BUILD)/dpkg
-	$(MAKE) -C $(BUILD)/dpkg -j $(NUM_JOBS) DESTDIR=$@ install && touch $@
-
-################################################################################
 # rootfs                                                                       #
 ################################################################################
 
 $(BUILD)/rootfs:
+	mkinitramfs -o $@ $(BUILD)/initrd/
 
 ################################################################################
 # initrd.img                                                                   #
@@ -272,7 +236,7 @@ $(BUILD)/initrd.img: $(BUILD)/initrd
 	# pack the initramfs and make everything be owned by root
 	$(shell cd $< && find . | cpio -o -H newc -R 0:0 | gzip > $@ )
 
-$(BUILD)/initrd: $(BUILD)/install/dpkg $(SRC)/initfs $(BUILD)/busybox/busybox $(BUILD)/install/bash \
+$(BUILD)/initrd: $(SRC)/initfs $(BUILD)/busybox/busybox $(BUILD)/install/bash \
 		$(SYSROOT) $(SRC)/initfs/init
 	# TODO: the copying isn't really working
 	mkdir -p $@ && rm -rf $@/*
@@ -281,7 +245,6 @@ $(BUILD)/initrd: $(BUILD)/install/dpkg $(SRC)/initfs $(BUILD)/busybox/busybox $(
 	@# -a : copy everything (timestamps etc )
 	@#
 	rsync -a $(SYSROOT)/ $@/
-	rsync -a $(BUILD)/install/dpkg/ $@/
 	#rsync -a $(BUILD)/busybox/busybox $@/bin/busybox
 	cp --preserve=all $(BUILD)/busybox/busybox $@/bin/busybox
 	rsync -a $(SRC)/initfs/ $@/
