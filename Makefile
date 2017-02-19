@@ -234,7 +234,8 @@ $(BUILD)/ports/filesystem-1.0.pkg.tar.xz: $(SRC)/ports/filesystem
 # rootfs                                                                       #
 ################################################################################
 
-$(BUILD)/rootfs: $(SRC)/rootfs $(BUILD)/busybox/busybox $(SYSROOT)
+$(BUILD)/rootfs: $(SRC)/rootfs $(BUILD)/busybox/busybox $(SYSROOT) \
+		$(BUILD)/ports/filesystem-1.0.pkg.tar.xz
 	rm -rf $@ && mkdir -p $@
 	rsync -a $(SYSROOT)/ $@/
 	# setup some temporary stuff for pacman
