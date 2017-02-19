@@ -8,3 +8,4 @@ Based on [AwlsomeLinux](https://github.com/AwlsomeAlex/AwlsomeLinux) which was f
 * pacman >= 3.0
 * wget
 * rsync
+* fakeroot

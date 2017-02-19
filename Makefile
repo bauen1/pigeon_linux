@@ -226,7 +226,8 @@ $(BUILD)/install/bash: $(BUILD)/bash
 # ports                                                                        #
 ################################################################################
 
-$(BUILD)/ports/%.pkg.tar.xz: $(SRC)/ports/%
+# TODO: make this abstract again
+$(BUILD)/ports/filesystem-1.0.pkg.tar.xz: $(SRC)/ports/filesystem
 	rm -rf $@ && export PKGDEST=$(@D) && cd $< && makepkg
 
 ################################################################################
@@ -235,8 +236,8 @@ $(BUILD)/ports/%.pkg.tar.xz: $(SRC)/ports/%
 
 $(BUILD)/rootfs: $(SRC)/rootfs $(BUILD)/busybox/busybox $(SYSROOT)
 	rm -rf $@ && mkdir -p $@
-	pacman --root "$@" -U $(BUILD)/ports/filesystem-1.0.pkg.tar.xz
 	rsync -a $(SYSROOT)/ $@/
+	fakeroot /bin/sh -c 'pacman --root "$@" -U $(BUILD)/ports/filesystem-1.0.pkg.tar.xz'
 	cp --preserve=all $(BUILD)/busybox/busybox $@/bin/busybox
 	rsync -a $(SRC)/rootfs/ $@/
 	touch $@
@@ -252,7 +253,7 @@ $(BUILD)/initrd.img: $(BUILD)/initrd
 $(BUILD)/initrd: $(BUILD)/rootfs $(SRC)/initfs/init
 	rm -rf $@ && mkdir -p $@
 	rsync -a $(BUILD)/rootfs/ $@/
-	cp --preserve=all $(SRC)/initfs/init
+	cp --preserve=all $(SRC)/initfs/init $@/
 	touch $@
 
 ################################################################################
