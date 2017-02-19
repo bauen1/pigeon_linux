@@ -53,7 +53,7 @@ PORTS_ROOT=$(BUILD)/rootfs
 BUILD_PORTS=$(BUILD)/ports
 SRC_PORTS=$(SRC)/ports
 STANDARD_PORT_BUILD=rm -rf $@ && mkdir -p $(@D) && rsync -a $</ $(@D)/ \
-	&& cd $(@D) && export PACMAN="pacman --root $(PORTS_ROOT)" && makepkg
+	&& cd $(@D) && makepkg
 
 $(BUILD_PORTS)/filesystem/filesystem-1.0.pkg.tar.xz: $(SRC_PORTS)/filesystem
 	$(STANDARD_PORT_BUILD)
@@ -72,7 +72,7 @@ $(BUILD_PORTS)/busybox/busybox-1.26.2.pkg.tar.xz: $(SRC_PORTS)/busybox
 ################################################################################
 
 define install_port
-	fakeroot /bin/sh -c 'pacman --rot "$@" -U $(BUILD_PORTS)/$(1)/$(1)-$(2).pkg.tar.xz'
+	fakeroot /bin/sh -c 'pacman --root "$@" -U $(BUILD_PORTS)/$(1)/$(1)-$(2).pkg.tar.xz'
 endef
 
 $(BUILD)/rootfs: $(SRC)/rootfs \
