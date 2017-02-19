@@ -10,9 +10,9 @@ arch=('any')
 url="https://github.com/bauen1/pigeon_linux"
 license=('MIT')
 groups=('core')
-depends=('')
-optdepends=('')
-makedepends=('')
+#depends=('')
+#optdepends=('')
+#makedepends=('')
 #checkdepends=('')
 #provides=('')
 #conflicts=('')
@@ -40,6 +40,9 @@ package() {
   install -d -m1777 $PKGDIR/tmp
   install -d -m755 $PKGDIR/usr
   install -d -m755 $PKGDIR/var
+
+  # pacman stuff
+  install -d -m755 $PKGDIR/var/{cache/pacman/pkg,lib/pacman,log}
 
   # populate the /etc directory
   install -m 0644 issue $PKGDIR/etc
