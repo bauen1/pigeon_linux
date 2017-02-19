@@ -86,18 +86,6 @@ $(SRC)/busybox: $(SRC)/$(BUSYBOX_DOWNLOAD_FILE)
 	mkdir -p $@ && rm -rf $@/*
 	tar -xvf $< -C $@ --strip-components=1
 
-# bash
-
-BASH_DOWNLOAD_FILE=bash-4.4.tar.gz
-BASH_DOWNLOAD_URL=http://ftpmirror.gnu.org/bash/$(BASH_DOWNLOAD_FILE)
-
-$(SRC)/$(BASH_DOWNLOAD_FILE):
-	rm -rf $@ && wget $(BASH_DOWNLOAD_URL) -O $@
-
-$(SRC)/bash: $(SRC)/$(BASH_DOWNLOAD_FILE)
-	mkdir -p $@ && rm -rf $@/*
-	tar -xvf $< -C $@ --strip-components=1
-
 ################################################################################
 # Linux kernel                                                                 #
 ################################################################################
@@ -203,24 +191,6 @@ $(BUILD)/busybox/.config: $(SRC)/busybox $(SYSROOT)
 
 $(BUILD)/busybox/busybox: $(BUILD)/busybox/.config $(SYSROOT)
 	$(BUSYBOX_MAKE) all && touch $@
-
-################################################################################
-# bash                                                                         #
-################################################################################
-
-$(BUILD)/bash/Makefile: $(SRC)/bash
-	rm -rf $(@D) && mkdir -p $(@D)
-	cd "$(@D)" ; $(SRC)/bash/configure \
-		--with-sysroot=$(SYSROOT) \
-		--prefix=/ \
-		CFLAGS="$(CFLAGS)" && touch $@
-
-$(BUILD)/bash: $(BUILD)/bash/Makefile
-	$(MAKE) -C $(BUILD)/bash -j $(NUM_JOBS) && touch $@
-
-$(BUILD)/install/bash: $(BUILD)/bash
-	$(MAKE) -C $(BUILD)/bash -j $(NUM_JOBS) DESTDIR=$@ install && touch $@
-
 
 ################################################################################
 # ports                                                                        #
