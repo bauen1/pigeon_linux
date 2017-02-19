@@ -226,17 +226,21 @@ $(BUILD)/install/bash: $(BUILD)/bash
 # ports                                                                        #
 ################################################################################
 
-$(BUILD)/ports/%.pkg.tar.xz: $(SRC)/ports/%
-	rm -rf $@ && export PKGDEST=$(@D) && cd $< && makepkg
+# TODO: make this abstract again
+$(BUILD)/ports/filesystem/filesystem-1.0.pkg.tar.xz: $(SRC)/ports/filesystem
+	rm -rf $@ && mkdir -p $(@D) && rsync --preserve=all $</ $(@D)/ && cd $(@D) && makepkg
 
 ################################################################################
 # rootfs                                                                       #
 ################################################################################
 
-$(BUILD)/rootfs: $(SRC)/rootfs $(BUILD)/busybox/busybox $(SYSROOT)
+$(BUILD)/rootfs: $(SRC)/rootfs $(BUILD)/busybox/busybox $(SYSROOT) \
+		$(BUILD)/ports/filesystem/filesystem-1.0.pkg.tar.xz
 	rm -rf $@ && mkdir -p $@
-	pacman --root "$@" -U $(BUILD)/ports/filesystem-1.0.pkg.tar.xz
 	rsync -a $(SYSROOT)/ $@/
+	# setup some temporary stuff for pacman
+	fakeroot /bin/sh -c 'mkdir -m 0755 -p $@/var/{cache/pacman/pkg,lib/pacman,log}'
+	fakeroot /bin/sh -c 'pacman --root "$@" -U $(BUILD)/ports/filesystem-1.0.pkg.tar.xz'
 	cp --preserve=all $(BUILD)/busybox/busybox $@/bin/busybox
 	rsync -a $(SRC)/rootfs/ $@/
 	touch $@
@@ -252,7 +256,7 @@ $(BUILD)/initrd.img: $(BUILD)/initrd
 $(BUILD)/initrd: $(BUILD)/rootfs $(SRC)/initfs/init
 	rm -rf $@ && mkdir -p $@
 	rsync -a $(BUILD)/rootfs/ $@/
-	cp --preserve=all $(SRC)/initfs/init
+	cp --preserve=all $(SRC)/initfs/init $@/
 	touch $@
 
 ################################################################################
