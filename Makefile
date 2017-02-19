@@ -44,13 +44,16 @@ qemu_serial: $(BUILD)/initrd.img $(BUILD)/kernel
 # ports                                                                        #
 ################################################################################
 
+# FIXME:
+PORTS_ROOT=$(BUILD)/rootfs
+
 # TODO: make this abstract again
 # Please note that dependencys must be resolved manually
 
 BUILD_PORTS=$(BUILD)/ports
 SRC_PORTS=$(SRC)/ports
 STANDARD_PORT_BUILD=rm -rf $@ && mkdir -p $(@D) && rsync -a $</ $(@D)/ \
-	&& cd $(@D) && export PACMAN="pacman --root $@" && makepkg
+	&& cd $(@D) && export PACMAN="pacman --root $(PORTS_ROOT)" && makepkg
 
 $(BUILD_PORTS)/filesystem/filesystem-1.0.pkg.tar.xz: $(SRC_PORTS)/filesystem
 	$(STANDARD_PORT_BUILD)
