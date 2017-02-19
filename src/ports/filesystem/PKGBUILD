@@ -22,7 +22,7 @@ backup=('etc/issue' 'etc/motd' 'etc/shells' 'etc/fstab')
 #install=('')
 #changelog=('') # TODO:
 source=('issue' 'motd' 'shells' 'fstab')
-#sha256sums=('') # TODO:
+sha256sums=('SKIP', 'SKIP', 'SKIP', 'SKIP') # TODO:
 
 package() {
   # TODO: proper permissions
