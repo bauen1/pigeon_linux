@@ -55,7 +55,7 @@ package() {
   install -d -m755 $pkgdir/usr/share/man
   install -d -m755 $pkgdir/usr/share/man/man{1,2,3,4,5,6,7,8}
   install -d -m755 $pkgdir/usr/src
-  ln -s ../var $pkgdir/var
+  ln -s ../var $pkgdir/usr/var
   install -d -m755 $pkgdir/var
   install -d -m755 $pkgdir/var/cache
   install -d -m755 $pkgdir/var/cache/pacman
