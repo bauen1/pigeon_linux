@@ -21,5 +21,9 @@ build() {
 }
 
 package() {
-  install -d -m755 "$srcdir/busybox-$pkgver/busybox" "$pkgdir/bin/busybox"
+  cd "$srcdir/busybox-$pkgver"
+  install -D -m755 busybox "$pkgdir"/bin/busybox
+  install -D -m644 docs/busybox.1 "$pkgdir"/usr/share/man/man1/busybox.1
+  install -D -m644 docs/BusyBox.html "$pkgdir"/usr/share/doc/$pkgname/BusyBox.html
+  install -D -m644 docs/BusyBox.txt "$pkgdir"/usr/share/doc/$pkgname/BusyBox.txt
 }
