@@ -8,7 +8,7 @@ license=('GPL')
 depends=('glibc')
 options=('!buildflags')
 source=(http://busybox.net/downloads/busybox-$pkgver.tar.bz2)
-sha256sums=('SKIP')
+sha256sums=('da3e44913fc1a9c9b7c5337ea5292da518683cbff32be630777f565d6036af16')
 
 prepare() {
   cd "busybox-$pkgver"

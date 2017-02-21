@@ -61,17 +61,17 @@ package() {
   install -d -m755 $pkgdir/var/cache/pacman
   install -d -m755 $pkgdir/var/cache/pacman/pkg
   install -d -m755 $pkgdir/var/empty
-  install -d -m755 $pkgdir/var/ftp
+  #install -d -m755 $pkgdir/var/ftp
   install -d -m755 $pkgdir/var/lib
   install -d -m755 $pkgdir/var/lib/pacman
   install -d -m755 $pkgdir/var/lock
   install -d -m755 $pkgdir/var/log
-  install -d -m755 $pkgdir/var/log/old
-  ln -s spool/mail $pkgdir/var/mail
-  install -d -m755 $pkgdir/var/run
-  install -d -m755 $pkgdir/var/run/utmp
-  install -d -m755 $pkgdir/varspool
-  install -d -m755 $pkgdir/var/spool/mail
-  install -d -m755 $pkgdir/var/tmp
-  install -d -m755 $pkgdir/var/www
+  #install -d -m755 $pkgdir/var/log/old
+  #ln -s spool/mail $pkgdir/var/mail
+  #install -d -m755 $pkgdir/var/run
+  #install -d -m755 $pkgdir/var/run/utmp
+  #install -d -m755 $pkgdir/var/spool
+  #install -d -m755 $pkgdir/var/spool/mail
+  #install -d -m755 $pkgdir/var/tmp
+  #install -d -m755 $pkgdir/var/www
 }
