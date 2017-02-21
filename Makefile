@@ -53,8 +53,8 @@ PORTS_ROOT=$(BUILD)/rootfs
 BUILD_PORTS=$(BUILD)/ports
 SRC_PORTS=$(SRC)/ports
 
-$(BUILD_PORTS)/%.pkg.tar.xz: $(SRC_PORTS)/$(substr $(*F), 0, $(strpos $(*F), '-')) \
-		$(shell find $(SRC_PORTS)/$(substr $(*F), 0, $(strpos $(*F), '-')) -type f)
+$(BUILD_PORTS)/%-*.pkg.tar.xz: $(SRC_PORTS)/$(*F) \
+		$(shell find $(SRC_PORTS)/$(*F) -type f)
 	# prepare the ports root if not already done
 	fakeroot /bin/sh -c 'mkdir -m 0755 -p $(PORTS_ROOT)/var/{cache/pacman/pkg,lib/pacman,log}'
 	rm -rf $(@D)/$(*F)/* && mkdir -p $(@D)/$(*F)
