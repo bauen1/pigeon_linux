@@ -55,7 +55,7 @@ SRC_PORTS=$(SRC)/ports
 define standard_port_build
 	# prepare the ports root if not already done
 	fakeroot /bin/sh -c 'mkdir -m 0755 -p $(PORTS_ROOT)/var/{cache/pacman/pkg,lib/pacman,log}'
-	rm -rf $@ && mkdir -p $(@D) && rsync -a $</ $(@D)/ && \
+	rm -rf $(@D)/* && mkdir -p $(@D) && rsync -a $</ $(@D)/ && \
 		cd $(@D) && export PACMAN='$(SRC)/pacman_wrapper.sh' && makepkg -f && touch $(@D) && touch $@
 endef
 
