@@ -1,5 +1,5 @@
+# Maintainer: bauen1 <j2468h@gmail.com>
 # linux - provides the kernel and kernel modules
-#
 #
 
 pkgbase=linux
@@ -21,6 +21,8 @@ sha256sums=('SKIP'
 #validpgpkeys=('ABAF11C65A2970B130ABE3C479BE3E4300411886' # Linus Torvalds
 #              '647F28654894E3BD457199BE38DBBDC86092693E' # Greg Kroah-Hartman
 #              )
+groups=('base')
+
 
 _kernelname=${pkgname#linux}
 
@@ -56,7 +58,7 @@ _package-headers() {
   pkgdesc="The ${pkgbase/linux/Linux} header files"
   cd "${srcdir}/${_srcname}"
 
-  make ${MAKEFLAGS} INSTALL_HDR_PATH="$pkgdir/usr" headers_install
+  make ${MAKEFLAGS} INSTALL_HDR_PATH="${pkgdir}/usr" headers_install
 }
 
 _package-docs() {

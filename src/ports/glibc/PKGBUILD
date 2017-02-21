@@ -1,6 +1,6 @@
+# Maintainer: bauen1 <j2468h@gmail.com>
 # Description:
 # URL:
-# Maintainer:
 
 pkgname=glibc
 pkgver=2.25
@@ -10,7 +10,7 @@ pkgdesc="GNU C Library"
 arch=('i686' 'x86_64')
 url="http://www.gnu.org/software/libc"
 license=('GPL' 'LPGL')
-group=('core')
+groups=('base')
 depends=('linux-headers>=4.5' 'filesystem')
 makedepends=('gcc>=6' 'git')
 #backup=('')

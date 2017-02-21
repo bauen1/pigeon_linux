@@ -1,15 +1,13 @@
-#
-#
-#
+# Maintainer: bauen1 <j2468h@gmail.com>
 
 pkgname=filesystem
 pkgver=1.0
 pkgrel=1
-pkgdesc="The filesystem base for pigeon linux"
+pkgdesc="the base files for the pigeon linux distro"
 arch=('any')
 url="https://github.com/bauen1/pigeon_linux"
 license=('MIT')
-groups=('core')
+groups=('base')
 #makedepends=('')
 #checkdepends=('')
 backup=('etc/issue' 'etc/motd' 'etc/shells' 'etc/fstab')
