@@ -52,39 +52,32 @@ PORTS_ROOT=$(BUILD)/rootfs
 
 BUILD_PORTS=$(BUILD)/ports
 SRC_PORTS=$(SRC)/ports
-define standard_port_build
+
+$(BUILD_PORTS)/%.pkg.tar.xz: $(SRC_PORTS)/$(substr $(*F), 0, $(strpos $(*F), '-')) \
+		$(shell find $(SRC_PORTS)/$(substr $(*F), 0, $(strpos $(*F), '-')) -type f)
 	# prepare the ports root if not already done
 	fakeroot /bin/sh -c 'mkdir -m 0755 -p $(PORTS_ROOT)/var/{cache/pacman/pkg,lib/pacman,log}'
-	rm -rf $(@D)/* && mkdir -p $(@D) && rsync -a $</ $(@D)/ && \
-		cd $(@D) && export PACMAN='$(SRC)/pacman_wrapper.sh' && makepkg -f && touch $(@D) && touch $@
-endef
-
-$(BUILD_PORTS)/filesystem/%.pkg.tar.xz: $(shell find "$(SRC_PORTS)"/filesystem)
-	$(call standard_port_build)
-
-$(BUILD_PORTS)/linux/%.pkg.tar.xz: $(shell find "$(SRC_PORTS)"/linux)
-	$(call standard_port_build)
-
-$(BUILD_PORTS)/glibc/%.pkg.tar.xz: $(shell find "$(SRC_PORTS)"/glibc)
-	$(call standard_port_build)
-
-$(BUILD_PORTS)/busybox/&.pkg.tar.xz: $(shell find "$(SRC_PORTS)"/busybox)
-	$(call standard_port_build)
+	rm -rf $(@D)/$(*F)/* && mkdir -p $(@D)/$(*F)
+	cd $< && \
+		makepkg -f \
+			PACMAN='$(SRC)/pacman_wrapper.sh' \
+			PKGDEST='$(@D)' \
+			BUILDDIR='$(@D)/$(*F)/'
 
 ################################################################################
 # rootfs                                                                       #
 ################################################################################
 
 define install_port
-	fakeroot /bin/sh -c 'pacman --root "$@" -U $(BUILD_PORTS)/$(1)/$(1)-$(2).pkg.tar.xz'
+	fakeroot /bin/sh -c 'pacman --root "$@" -U $(BUILD_PORTS)/$(1)-$(2).pkg.tar.xz'
 endef
 
 $(BUILD)/rootfs: $(SRC)/rootfs \
-		$(BUILD_PORTS)/filesystem/filesystem-1.0.pkg.tar.xz \
-		$(BUILD_PORTS)/linux/linux-4.8.9.pkg.tar.xz \
-		$(BUILD_PORTS)/linux/linux-headers-4.8.9-x86_64.pkg.tar.xz \
-		$(BUILD_PORTS)/glibc/glibc-2.25.pkg.tar.xz \
-		$(BUILD_PORTS)/busybox/busybox-1.26.2.pkg.tar.xz
+		$(BUILD_PORTS)/filesystem-1.0.pkg.tar.xz \
+		$(BUILD_PORTS)/linux-4.8.9.pkg.tar.xz \
+		$(BUILD_PORTS)/linux-headers-4.8.9-x86_64.pkg.tar.xz \
+		$(BUILD_PORTS)/glibc-2.25.pkg.tar.xz \
+		$(BUILD_PORTS)/busybox-1.26.2.pkg.tar.xz
 	rm -rf $@ && mkdir -p $@
 	# setup some temporary stuff for pacman
 	fakeroot /bin/sh -c 'mkdir -m 0755 -p $@/var/{cache/pacman/pkg,lib/pacman,log}'
