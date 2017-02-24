@@ -100,18 +100,6 @@ $(SRC)/busybox: $(SRC)/$(BUSYBOX_DOWNLOAD_FILE)
 	mkdir -p $@ && rm -rf $@/*
 	tar -xvf $< -C $@ --strip-components=1
 
-# bash
-
-BASH_DOWNLOAD_FILE=bash-4.4.tar.gz
-BASH_DOWNLOAD_URL=http://ftpmirror.gnu.org/bash/$(BASH_DOWNLOAD_FILE)
-
-$(SRC)/$(BASH_DOWNLOAD_FILE):
-	rm -rf $@ && wget $(BASH_DOWNLOAD_URL) -O $@
-
-$(SRC)/bash: $(SRC)/$(BASH_DOWNLOAD_FILE)
-	mkdir -p $@ && rm -rf $@/*
-	tar -xvf $< -C $@ --strip-components=1
-
 ################################################################################
 # Linux kernel                                                                 #
 ################################################################################
@@ -217,34 +205,78 @@ $(BUILD)/busybox/busybox: $(BUILD)/busybox/.config $(SYSROOT)
 	$(BUSYBOX_MAKE) all && touch $@
 
 ################################################################################
-# bash                                                                         #
-################################################################################
-
-$(BUILD)/bash/Makefile: $(SRC)/bash
-	rm -rf $(@D) && mkdir -p $(@D)
-	cd "$(@D)" ; $(SRC)/bash/configure \
-		--with-sysroot=$(SYSROOT) \
-		--prefix=/ \
-		CFLAGS="$(CFLAGS)" && touch $@
-
-$(BUILD)/bash: $(BUILD)/bash/Makefile
-	$(MAKE) -C $(BUILD)/bash -j $(NUM_JOBS) && touch $@
-
-$(BUILD)/install/bash: $(BUILD)/bash
-	$(MAKE) -C $(BUILD)/bash -j $(NUM_JOBS) DESTDIR=$@ install && touch $@
-
-
-################################################################################
-# filesystem port                                                              #
-################################################################################
-
-# TODO: abstract this to build all ports
-
-################################################################################
 # rootfs                                                                       #
 ################################################################################
 
-$(BUILD)/rootfs:
+$(BUILD)/rootfs: $(SRC)/initfs $(BUILD)/busybox/busybox $(SYSROOT)
+	rm -rf $@ && mkdir -p $@
+	# create the basic filesystem layout
+	# please keep these sorted
+	install -d -m 0755 $@/bin
+	install -d -m 0755 $@/boot
+	install -d -m 0755 $@/dev
+	install -d -m 0755 $@/dev/pts
+	install -d -m 0755 $@/dev/shm
+	install -d -m 0755 $@/etc
+	install -m 0644 $(SRC)/filesystem/etc/fstab $@/etc/fstab
+	install -m 0644 $(SRC)/filesystem/etc/group $@/etc/group
+	install -m 0600 $(SRC)/filesystem/etc/gshadow $@/etc/gshadow
+	install -m 0644 $(SRC)/filesystem/etc/issue $@/etc/issue
+	install -m 0644 $(SRC)/filesystem/etc/motd $@/etc/motd
+	ln -s ../proc/self/mounts $@/etc/mtab
+	#install -m 0644 $(SRC)/filesystem/etc/os-version $@/etc/os-version
+	install -m 0644 $(SRC)/filesystem/etc/passwd $@/etc/passwd
+	install -m 0644 $(SRC)/filesystem/etc/securetty $@/etc/securetty
+	install -m 0600 $(SRC)/filesystem/etc/shadow $@/etc/shadow
+	install -m 0644 $(SRC)/filesystem/etc/shells $@/etc/shells
+	install -d -m 0755 $@/home
+	install -d -m 0755 $@/lib
+	install -d -m 0755 $@/lib/modules
+	install -d -m 0755 $@/lib32
+	install -d -m 0755 $@/lib64
+	install -d -m 0755 $@/mnt
+	install -d -m 0755 $@/opt
+	install -d -m 0755 $@/opt/bin
+	install -d -m 0755 $@/opt/sbin
+	install -d -m 0555 $@/proc
+	install -d -m 0750 $@/root
+	install -d -m 0755 $@/run
+	install -d -m 0755 $@/sboot
+	install -d -m 0555 $@/sys
+	install -d -m 1777 $@/tmp
+	install -d -m 0755 $@/usr
+	install -d -m 0755 $@/usr/bin
+	install -d -m 0755 $@/usr/include
+	install -d -m 0755 $@/usr/lib
+	install -d -m 0755 $@/usr/lib32
+	install -d -m 0755 $@/usr/lib64
+	install -d -m 0755 $@/usr/sbin
+	install -d -m 0755 $@/usr/share
+	install -d -m 0755 $@/usr/share/man
+	install -d -m 0755 $@/usr/share/man/man{1,2,3,4,5,6,7,8}
+	install -d -m 0755 $@/usr/src
+	install -d -m 0755 $@/usr/var
+	install -d -m 0755 $@/var
+	install -d -m 0755 $@/var/cache
+	install -d -m 0755 $@/var/empty
+	install -d -m 0755 $@/var/ftp
+	install -d -m 0755 $@/var/lib
+	install -d -m 0755 $@/var/lib/pkg
+	install -d -m 0755 $@/var/lock
+	install -d -m 0755 $@/var/log
+	install -d -m 0755 $@/var/log/old
+	#install -d -m 0755 $@/var/mail
+	ln -s spool/mail $@/var/mail
+	install -d -m 0755 $@/var/run
+	install -d -m 0755 $@/var/run/utmp
+	install -d -m 0755 $@/var/spool
+	install -d -m 1777 $@/var/spool/mail
+	install -d -m 1777 $@/var/tmp
+	# copy all the files in the sysroot over
+	rsync -avr $(SYSROOT)/ $@/
+	rsync -avr $(BUILD)/busybox/busybox $@/bin/busybox
+	# update the date on the directory itself
+	touch $@
 
 ################################################################################
 # initrd.img                                                                   #
@@ -254,21 +286,10 @@ $(BUILD)/initrd.img: $(BUILD)/initrd
 	# pack the initramfs and make everything be owned by root
 	$(shell cd $< && find . | cpio -o -H newc -R 0:0 | gzip > $@ )
 
-$(BUILD)/initrd: $(SRC)/initfs $(BUILD)/busybox/busybox $(BUILD)/install/bash \
-		$(SYSROOT) $(SRC)/initfs/init
-	# TODO: the copying isn't really working
-	mkdir -p $@ && rm -rf $@/*
-	@# create needed directories if not already present
-	cd $@ && mkdir -p bin boot dev etc lib lib64 mnt proc root sbin sys tmp usr usr/bin usr/sbin
-	@# -a : copy everything (timestamps etc )
-	@#
-	rsync -a $(SYSROOT)/ $@/
-	#rsync -a $(BUILD)/busybox/busybox $@/bin/busybox
-	cp --preserve=all $(BUILD)/busybox/busybox $@/bin/busybox
-	rsync -a $(SRC)/initfs/ $@/
-	# copy the loader
-	cp --preserve=all $@/lib/ld* $@/lib64
-	@#
+$(BUILD)/initrd: $(SRC)/initfs $(BUILD)/rootfs
+	rm -rf $@ && mkdir -p $@
+	rsync -avr $(BUILD)/rootfs/ $@/
+	rsync -avrI $(SRC)/initfs $@/
 	touch $@
 
 ################################################################################
