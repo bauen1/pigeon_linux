@@ -60,16 +60,16 @@ define standard_port_build
 		cd $(@D) && export PACMAN='$(SRC)/pacman_wrapper.sh' && makepkg -f && touch $(@D) && touch $@
 endef
 
-$(BUILD_PORTS)/filesystem/filesystem-1.0.pkg.tar.xz: $(SRC_PORTS)/filesystem
+$(BUILD_PORTS)/filesystem/%.pkg.tar.xz: $(shell find "$(SRC_PORTS)"/filesystem)
 	$(call standard_port_build)
 
-$(BUILD_PORTS)/linux/linux-headers-4.8.9-x86_64.pkg.tar.xz $(BUILD_PORTS)/linux/linux-4.8.9.pkg.tar.xz: $(SRC_PORTS)/linux
+$(BUILD_PORTS)/linux/%.pkg.tar.xz: $(shell find "$(SRC_PORTS)"/linux)
 	$(call standard_port_build)
 
-$(BUILD_PORTS)/glibc/glibc-2.25.pkg.tar.xz: $(SRC_PORTS)/glibc
+$(BUILD_PORTS)/glibc/%.pkg.tar.xz: $(shell find "$(SRC_PORTS)"/glibc)
 	$(call standard_port_build)
 
-$(BUILD_PORTS)/busybox/busybox-1.26.2.pkg.tar.xz: $(SRC_PORTS)/busybox
+$(BUILD_PORTS)/busybox/&.pkg.tar.xz: $(shell find "$(SRC_PORTS)"/busybox)
 	$(call standard_port_build)
 
 ################################################################################
