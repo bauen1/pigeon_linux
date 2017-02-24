@@ -21,7 +21,21 @@ CFLAGS ?=-Os -s -U_FORTIFY_SOURCE
 # Special Targets                                                              #
 ################################################################################
 
-.DEFAULT .PHONY: all
+.DEFAULT: help
+.PHONY: info
+info:
+	@echo "targets:         "
+	@echo "	                "
+	@echo "	all             "
+	@echo "	                "
+	@echo "	clean           "
+	@echo "	                "
+	@echo "	qemu            "
+	@echo "	                "
+	@echo "	qemu_serial     "
+	@echo "	                "
+
+.PHONY: all
 all: qemu
 
 .PHONY: clean
@@ -53,7 +67,7 @@ qemu_serial: $(BUILD)/initrd.img $(BUILD)/kernel
 # linux kernel
 
 LINUX_KERNEL_DOWNLOAD_FILE=linux-4.4.47.tar.xz
-LINUX_KERNEL_DOWNLOAD_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-4.4.47.tar.xz
+LINUX_KERNEL_DOWNLOAD_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/$(LINUX_KERNEL_DOWNLOAD_FILE)
 
 $(SRC)/$(LINUX_KERNEL_DOWNLOAD_FILE):
 	rm -rf $@ && wget $(LINUX_KERNEL_DOWNLOAD_URL) -O $@
@@ -117,9 +131,7 @@ $(BUILD)/linux/arch/x86/boot/bzImage: $(BUILD)/linux/.config #$(BUILD)/linux/vml
 	$(LINUX_KERNEL_MAKE) bzImage
 
 $(BUILD)/kernel: $(BUILD)/linux/arch/x86/boot/bzImage
-	cp $< $@
-
-###
+	ln -s linux/arch/x86/boot/bzImage "$@"
 
 # install the kernel headers
 $(BUILD)/install/linux/include: $(BUILD)/linux/.config
