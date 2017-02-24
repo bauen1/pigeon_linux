@@ -9,6 +9,5 @@ build/*
 # Ignore source files that can be rebuild/extracted
 src/*
 !src/initfs
-!src/*.tar.*
 !src/rootfs
 !src/filesystem

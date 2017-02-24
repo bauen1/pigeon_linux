@@ -29,6 +29,7 @@ info:
 	@echo "	all             "
 	@echo "	                "
 	@echo "	clean           "
+	@echo "	clean_src       "
 	@echo "	                "
 	@echo "	qemu            "
 	@echo "	                "
@@ -43,6 +44,10 @@ clean:
 	rm -rf $(BUILD)/*
 	rm -rf $(SRC)/kernel
 	rm -rf $(SRC)/busybox
+
+.PHONY: clean_src
+clean_src:
+	rm -rf $(SRC)/*.tar*
 
 .POHNY: qemu
 qemu: $(BUILD)/initrd.img $(BUILD)/kernel
