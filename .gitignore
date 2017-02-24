@@ -12,4 +12,3 @@ src/*
 !src/*.tar.*
 !src/rootfs
 !src/ports
-!src/*.sh
