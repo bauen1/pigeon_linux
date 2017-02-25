@@ -109,6 +109,18 @@ $(SRC)/syslinux: $(SRC)/$(SYSLINUX_DOWNLOAD_FILE)
 	rm -rf $@ && mkdir -p $@
 	tar -xvf $< -C $@ --strip-components=1 && touch $@
 
+# sinit (suckless init MIT license)
+
+SINIT_DOWNLOAD_FILE=sinit-1.0.tar.bz2
+SINIT_DOWNLOAD_URL=http://git.suckless.org/sinit/snapshot/$(SINIT_DOWNLOAD_FILE)
+
+$(SRC)/$(SINIT_DOWNLOAD_FILE):
+	rm -rf $@ && wget $(SINIT_DOWNLOAD_URL) -O $@
+
+$(SRC)/sinit: $(SRC)/$(SINIT_DOWNLOAD_FILE)
+	rm -rf $@ && mkdir -p $@
+	tar -xvf $< -C $@ --strip-components=1 && touch $@
+
 ################################################################################
 # Linux kernel                                                                 #
 ################################################################################
@@ -211,6 +223,19 @@ $(BUILD)/busybox/.config: $(SRC)/busybox $(SYSROOT)
 
 $(BUILD)/busybox/busybox: $(BUILD)/busybox/.config $(SYSROOT)
 	$(BUSYBOX_MAKE) all && touch $@
+
+################################################################################
+# sinit                                                                        #
+################################################################################
+
+$(BUILD)/sinit: $(SRC)/sinit $(SYSROOT)
+	rm -rf $@ && mkdir -p $@
+	cp -r $</ $@/
+	$(MAKE) -C $(BUILD)/sinit all CFLAGS="$(CFLAGS) --sysroot=$(SYSROOT)" && touch $@
+
+$(BUILD)/install/sinit: $(BUILD)/sinit
+	rm -rf $@ && mkdir -p $@
+	$(MAKE) -C $(BUILD)/sinit PREFIX=/usr DESTDIR=$@ install && touch $@
 
 ################################################################################
 # rootfs                                                                       #
