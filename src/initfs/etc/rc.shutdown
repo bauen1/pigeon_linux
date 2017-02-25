@@ -1,0 +1,26 @@
+#!/bin/busybox ash
+
+umask 022
+
+case "$1" in
+  reboot)
+    ;;
+  poweroff)
+    ;;
+  *)
+      echo "Invalid action '$1' for rc.shutdown" 1>&2
+      exit 1
+    ;;
+esac
+
+/bin/umount -a
+/bin/sync
+
+case "$1" in
+  reboot)
+    /bin/halt -r
+    ;;
+  poweroff)
+    /bin/halt -p
+    ;;
+esac
