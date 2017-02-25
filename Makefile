@@ -50,7 +50,7 @@ clean_src:
 	rm -rf $(SRC)/*.tar*
 
 .POHNY: qemu
-qemu: $(BUILD)/initrd.img $(BUILD)/kernel
+qemu: $(BUILD)/initrd.cpio.gz $(BUILD)/kernel
 	# FIXME: there seems to be a bug that on the first run with a newly build
 	# initrd the kernel crashes due to acpi (for what ever reason, i'm running
 	# qemu inside a virtualbox vm running debian 8 so that might be why )
@@ -58,7 +58,7 @@ qemu: $(BUILD)/initrd.img $(BUILD)/kernel
 	-sync
 	qemu-system-x86_64 -initrd $(BUILD)/initrd.img -kernel $(BUILD)/kernel -append vga=ask
 
-qemu_serial: $(BUILD)/initrd.img $(BUILD)/kernel
+qemu_serial: $(BUILD)/initrd.cpio.gz $(BUILD)/kernel
 	sleep 1
 	-sync
 	qemu-system-x86_64 -initrd $(BUILD)/initrd.img -kernel $(BUILD)/kernel -nographic -append console=ttyS0
@@ -78,8 +78,8 @@ $(SRC)/$(LINUX_KERNEL_DOWNLOAD_FILE):
 	rm -rf $@ && wget $(LINUX_KERNEL_DOWNLOAD_URL) -O $@
 
 $(SRC)/kernel: $(SRC)/$(LINUX_KERNEL_DOWNLOAD_FILE)
-	mkdir -p $@ && rm -rf $@/*
-	tar -xvf $< -C $@ --strip-components=1
+	rm -rf $@ && mkdir -p $@
+	tar -xvf $< -C $@ --strip-components=1 && touch $@
 
 # glibc
 
@@ -90,8 +90,8 @@ $(SRC)/$(GLIBC_DOWNLOAD_FILE):
 	rm -rf $@ && wget $(GLIBC_DOWNLOAD_URL) -O $@
 
 $(SRC)/glibc: $(SRC)/$(GLIBC_DOWNLOAD_FILE)
-	mkdir -p $@ && rm -rf $@/*
-	tar -xvf $< -C $@ --strip-components=1
+	rm -rf $@ && mkdir -p $@
+	tar -xvf $< -C $@ --strip-components=1 && touch $@
 
 # busybox
 
@@ -102,8 +102,8 @@ $(SRC)/$(BUSYBOX_DOWNLOAD_FILE):
 	rm -rf $@ && wget $(BUSYBOX_DOWNLOAD_URL) -O $@
 
 $(SRC)/busybox: $(SRC)/$(BUSYBOX_DOWNLOAD_FILE)
-	mkdir -p $@ && rm -rf $@/*
-	tar -xvf $< -C $@ --strip-components=1
+	rm -rf $@ && mkdir -p $@
+	tar -xvf $< -C $@ --strip-components=1 && touch $@
 
 ################################################################################
 # Linux kernel                                                                 #
@@ -288,18 +288,18 @@ $(BUILD)/rootfs: $(SRC)/initfs $(BUILD)/busybox/busybox $(SYSROOT)
 	touch $@
 
 ################################################################################
-# initrd.img                                                                   #
+# initrd.cpio.gz                                                               #
 ################################################################################
-
-$(BUILD)/initrd.img: $(BUILD)/initrd
-	# pack the initramfs and make everything be owned by root
-	$(shell cd $< && find . | cpio -o -H newc -R 0:0 | gzip > $@ )
 
 $(BUILD)/initrd: $(SRC)/initfs $(BUILD)/rootfs
 	rm -rf $@ && mkdir -p $@
 	rsync -avr $(BUILD)/rootfs/ $@/
 	rsync -avr $(SRC)/initfs/ $@/
 	touch $@
+
+$(BUILD)/initrd.cpio.gz: $(BUILD)/initrd
+	# pack the initramfs and make everything be owned by root
+	$(shell cd $< && find . | cpio -o -H newc -R 0:0 | gzip > $@ )
 
 ################################################################################
 #                                                                              #
