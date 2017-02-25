@@ -127,7 +127,7 @@ $(BUILD)/kernel: $(BUILD)/linux/arch/x86/boot/bzImage
 	ln -s linux/arch/x86/boot/bzImage "$@"
 
 # install the kernel headers
-$(BUILD)/install/linux/include: $(BUILD)/linux/.config
+$(BUILD)/install/linux/usr/include: $(BUILD)/linux/.config
 	mkdir -p $(@D) && rm -rf $(@D)/*
 	$(LINUX_KERNEL_MAKE)  INSTALL_HDR_PATH=$(@D) headers_install
 	touch $@
@@ -140,8 +140,7 @@ $(BUILD)/install/linux/lib: $(BUILD)/linux/.config
 	#$(LINUX_KERNEL_MAKE) INSTALL_FW_PATH=$(BUILD)/install/linux/lib/firmware firmware_install
 	touch $@
 
-#
-$(BUILD)/install/linux: $(BUILD)/install/linux/include $(BUILD)/install/linux/lib
+$(BUILD)/install/linux: $(BUILD)/install/linux/usr/include $(BUILD)/install/linux/lib
 	touch $@
 
 ################################################################################
@@ -153,7 +152,7 @@ $(BUILD)/glibc/Makefile: $(SRC)/glibc $(BUILD)/install/linux
 	mkdir -p $(@D) && rm -rf $(@D)/*
 	cd "$(@D)" ; $(SRC)/glibc/configure \
 		--prefix= \
-		--with-headers="$(BUILD)/install/linux/include" \
+		--with-headers="$(BUILD)/install/linux/usr/include" \
 		--with-kernel=3.2.0 \
 		--without-gd \
 		--without-selinux \
@@ -278,8 +277,11 @@ $(BUILD)/rootfs: $(SRC)/initfs $(BUILD)/busybox/busybox $(SYSROOT)
 	install -d -m 1777 $@/var/spool/mail
 	install -d -m 1777 $@/var/tmp
 	# copy all the files in the sysroot over
-	rsync -avr $(SYSROOT)/ $@/
-	rsync -avr $(BUILD)/busybox/busybox $@/bin/busybox
+	#rsync -avr $(SYSROOT)/ $@/
+	cp --preserve=all $(SYSROOT)/lib/ld-linux* $@/lib64
+	cp --preserve=all $(SYSROOT)/lib/{libm.so.6,libc.so.6,libresolv.so.2,libnss_dns.so.2} $@/lib
+	#rsync -avr $(BUILD)/busybox/busybox $@/bin/busybox
+	cp --preserve=all $(BUILD)/busybox/busybox $@/bin/busybox
 	# update the date on the directory itself
 	touch $@
 
@@ -294,7 +296,7 @@ $(BUILD)/initrd.img: $(BUILD)/initrd
 $(BUILD)/initrd: $(SRC)/initfs $(BUILD)/rootfs
 	rm -rf $@ && mkdir -p $@
 	rsync -avr $(BUILD)/rootfs/ $@/
-	rsync -avrI $(SRC)/initfs $@/
+	cp -rf $(SRC)/initfs/* $@/
 	touch $@
 
 ################################################################################
