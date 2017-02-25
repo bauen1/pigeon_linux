@@ -239,7 +239,7 @@ $(BUILD)/rootfs: $(SRC)/initfs $(BUILD)/busybox/busybox $(SYSROOT)
 	install -d -m 0755 $@/lib
 	install -d -m 0755 $@/lib/modules
 	install -d -m 0755 $@/lib32
-	install -d -m 0755 $@/lib64
+	ln -s lib $@/lib64
 	install -d -m 0755 $@/mnt
 	install -d -m 0755 $@/opt
 	install -d -m 0755 $@/opt/bin

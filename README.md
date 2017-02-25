@@ -5,4 +5,5 @@ Based on [AwlsomeLinux](https://github.com/AwlsomeAlex/AwlsomeLinux) which was f
 
 # dependencies
 * genisoimage
+* cpio (initramfs generation)
 * standard dev tools, gcc, ... etc (guess how we're gonna compile the kernel)
