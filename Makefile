@@ -121,6 +121,11 @@ $(SRC)/sinit: $(SRC)/$(SINIT_DOWNLOAD_FILE)
 	rm -rf $@ && mkdir -p $@
 	tar -xvf $< -C $@ --strip-components=1 && touch $@
 
+# ubase (unportable base)
+
+$(SRC)/ubase:
+	rm -rf $@ && git clone http://git.suckless.org/ubase
+
 ################################################################################
 # Linux kernel                                                                 #
 ################################################################################
@@ -194,8 +199,11 @@ SYSROOT=$(BUILD)/sysroot
 # create a sysroot (headers and libraries)
 $(SYSROOT): $(BUILD)/install/linux $(BUILD)/install/glibc
 	mkdir -p $@ && rm -rf $@/*
-	rsync -a $(BUILD)/install/linux/ $@/
 	rsync -a $(BUILD)/install/glibc/ $@/
+	cd $@/usr ; \
+		ln -s ../include include ; \
+		ln -s ../lib lib
+	rsync -a $(BUILD)/install/linux/ $@/
 	touch $@
 
 ################################################################################
@@ -234,6 +242,19 @@ $(BUILD)/sinit: $(SRC)/sinit $(SYSROOT)
 	$(MAKE) -C $(BUILD)/sinit all CFLAGS="$(CFLAGS) --sysroot=$(SYSROOT)" && touch $@
 
 $(BUILD)/install/sinit: $(BUILD)/sinit
+	rm -rf $@ && mkdir -p $@
+	$(MAKE) -C $(BUILD)/sinit PREFIX=/usr DESTDIR=$@ install && touch $@
+
+################################################################################
+# ubase                                                                        #
+################################################################################
+
+$(BUILD)/ubase: $(SRC)/ubase $(SYSROOT)
+	rm -rf $@ && mkdir -p $@
+	cp -r $</ $@/
+	$(MAKE) -C $(BUILD)/ubase all CFLAGS="$(CFLAGS) --sysroot=$(SYSROOT)" && touch $@
+
+$(BUILD)/install/ubase: $(BUILD)/ubase
 	rm -rf $@ && mkdir -p $@
 	$(MAKE) -C $(BUILD)/sinit PREFIX=/usr DESTDIR=$@ install && touch $@
 
