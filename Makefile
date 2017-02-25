@@ -200,7 +200,7 @@ $(BUILD)/busybox/.config: $(SRC)/busybox $(SYSROOT)
 	## ( btw my congratulations if you compile this under macOS or BSD
 	## or something else than linux )
 	# enable static linking for the time being FIXME: get this to work
-	cd $(@D) && sed -i 's/.*CONFIG_STATIC.*/CONFIG_STATIC=y/g' .config
+	# cd $(@D) && sed -i 's/.*CONFIG_STATIC.*/CONFIG_STATIC=y/g' .config
 	# dynamic linking rules!
 	##
 	cd $(@D) && sed -i 's/.*CONFIG_SYSROOT.*/CONFIG_SYSROOT="$(SYSROOT_ESCAPED)"/g' .config
@@ -228,7 +228,7 @@ $(BUILD)/rootfs: $(SRC)/initfs $(BUILD)/busybox/busybox $(SYSROOT)
 	install -m 0644 $(SRC)/filesystem/etc/issue $@/etc/issue
 	install -m 0644 $(SRC)/filesystem/etc/motd $@/etc/motd
 	ln -s ../proc/self/mounts $@/etc/mtab
-	#install -m 0644 $(SRC)/filesystem/etc/os-version $@/etc/os-version
+	install -m 0644 $(SRC)/filesystem/etc/os-version $@/etc/os-version
 	install -m 0644 $(SRC)/filesystem/etc/passwd $@/etc/passwd
 	install -m 0644 $(SRC)/filesystem/etc/securetty $@/etc/securetty
 	install -m 0600 $(SRC)/filesystem/etc/shadow $@/etc/shadow
@@ -269,7 +269,6 @@ $(BUILD)/rootfs: $(SRC)/initfs $(BUILD)/busybox/busybox $(SYSROOT)
 	install -d -m 0755 $@/var/lock
 	install -d -m 0755 $@/var/log
 	install -d -m 0755 $@/var/log/old
-	#install -d -m 0755 $@/var/mail
 	ln -s spool/mail $@/var/mail
 	install -d -m 0755 $@/var/run
 	install -d -m 0755 $@/var/run/utmp
@@ -299,7 +298,7 @@ $(BUILD)/initrd.img: $(BUILD)/initrd
 $(BUILD)/initrd: $(SRC)/initfs $(BUILD)/rootfs
 	rm -rf $@ && mkdir -p $@
 	rsync -avr $(BUILD)/rootfs/ $@/
-	cp -rf $(SRC)/initfs/* $@/
+	rsync -avr $(SRC)/initfs/ $@/
 	touch $@
 
 ################################################################################
