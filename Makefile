@@ -33,8 +33,6 @@ info:
 	@echo "	                "
 	@echo "	qemu            "
 	@echo "	                "
-	@echo "	qemu_serial     "
-	@echo "	                "
 
 .PHONY: all
 all: qemu
@@ -50,18 +48,10 @@ clean_src:
 	rm -rf $(SRC)/*.tar*
 
 .POHNY: qemu
-qemu: $(BUILD)/initrd.cpio.gz $(BUILD)/kernel
-	# FIXME: there seems to be a bug that on the first run with a newly build
-	# initrd the kernel crashes due to acpi (for what ever reason, i'm running
-	# qemu inside a virtualbox vm running debian 8 so that might be why )
-	sleep 1
-	-sync
-	qemu-system-x86_64 -initrd $(BUILD)/initrd.img -kernel $(BUILD)/kernel -append vga=ask
-
-qemu_serial: $(BUILD)/initrd.cpio.gz $(BUILD)/kernel
-	sleep 1
-	-sync
-	qemu-system-x86_64 -initrd $(BUILD)/initrd.img -kernel $(BUILD)/kernel -nographic -append console=ttyS0
+qemu: $(BUILD)/pigeon_linux_live.iso
+	# if you get a "write error no space left error" throw more ram at it
+	-sleep 1 && sync
+	qemu-system-x86_64 -m 64M -cdrom $< -boot d -vga std
 
 ################################################################################
 # Source downloading                                                           #
@@ -104,6 +94,18 @@ $(SRC)/$(BUSYBOX_DOWNLOAD_FILE):
 $(SRC)/busybox: $(SRC)/$(BUSYBOX_DOWNLOAD_FILE)
 	rm -rf $@ && mkdir -p $@
 	tar -xvf $< -C $@ --strip-components=1 && touch $@
+
+# syslinux
+
+SYSLINUX_DOWNLOAD_FILE=syslinux-6.03.tar.xz
+SYSLINUX_DOWNLOAD_URL=http://kernel.org/pub/linux/utils/boot/syslinux/$(SYSLINUX_DOWNLOAD_FILE)
+
+$(SRC)/$(SYSLINUX_DOWNLOAD_FILE)
+	rm -rf $@ && wget $(SYSLINUX_DOWNLOAD_URL)
+
+$(SRC)/syslinux: $(SRC)/$(SYSLINUX_DOWNLOAD_FILE)
+	rm -rf $@ && mkdir -p $@
+	tar -xvf $< -C $@ && touch $@
 
 ################################################################################
 # Linux kernel                                                                 #
@@ -300,6 +302,34 @@ $(BUILD)/initrd: $(SRC)/initfs $(BUILD)/rootfs
 $(BUILD)/initrd.cpio.gz: $(BUILD)/initrd
 	# pack the initramfs and make everything be owned by root
 	$(shell cd $< && find . | cpio -o -H newc -R 0:0 | gzip > $@ )
+
+################################################################################
+# live iso generation                                                          #
+################################################################################
+
+$(BUILD)/iso: $(BUILD)/initrd.cpio.gz $(BUILD)/kernel $(SRC)/syslinux
+	rm -rf $@ && mkdir -p $@
+	cp $(BUILD)/initrd.cpio.gz $@/initrd.cpio.gz
+	cp $(BUILD)/kernel $@/kernel
+	cp $(SRC)/syslinux/bios/core/isolinux.bin $@/isolinux.bin
+	cp $(SRC)/syslinux/bios/com32/elflink/ldlinux/ldlinux.c32 $@/ldlinux.c32
+	mkdir -p $@/efi/boot # TODO: UEFI support
+	echo 'default kernel initrd=initrd.cpio.gz vga=ask' > $@/syslinux.cfg
+	touch $@
+
+$(BUILD)/pigeon_linux_live.iso: $(BUILD)/iso
+	genisoimage \
+		-J \
+		-r \
+		-o "$@" \
+		-b $(BUILD)/iso/isolinux.bin \
+		-c $(BUILD)/iso/boot.cat \
+		-input-charset UTF-8 \
+		-no-emul-boot \
+		-boot-load-size 4 \
+		-boot-info-table \
+		"$(BUILD)/iso"
+
 
 ################################################################################
 #                                                                              #
