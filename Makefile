@@ -12,7 +12,6 @@
 SRC ?=$(PWD)/src
 BUILD ?=$(PWD)/build
 DOCS ?=$(PWD)/docs
-NUM_JOBS ?=4
 
 # Optimize for size, strip, protect against bad implementations
 CFLAGS ?=-Os -s -U_FORTIFY_SOURCE
@@ -33,6 +32,9 @@ info:
 	@echo "	                "
 	@echo "	qemu            "
 	@echo "	                "
+	@echo "To speed up compiling it is recommended that you pass: "
+	@echo "-j <number of cpu cores>"
+	@echo "to this Makefile"
 
 .PHONY: all
 all: qemu
@@ -111,7 +113,7 @@ $(SRC)/syslinux: $(SRC)/$(SYSLINUX_DOWNLOAD_FILE)
 # Linux kernel                                                                 #
 ################################################################################
 
-LINUX_KERNEL_MAKE=$(MAKE) -C $(SRC)/kernel O=$(BUILD)/linux -j $(NUM_JOBS)
+LINUX_KERNEL_MAKE=$(MAKE) -C $(SRC)/kernel O=$(BUILD)/linux
 
 # Generate the default config for the kernel
 $(BUILD)/linux/.config: $(SRC)/kernel
@@ -122,7 +124,7 @@ $(BUILD)/linux/.config: $(SRC)/kernel
 	touch $@
 
 # generate the kernel in the compressed self-extracting bzImage format
-$(BUILD)/linux/arch/x86/boot/bzImage: $(BUILD)/linux/.config #$(BUILD)/linux/vmlinux
+$(BUILD)/linux/arch/x86/boot/bzImage: $(BUILD)/linux/.config
 	$(LINUX_KERNEL_MAKE) bzImage
 
 $(BUILD)/kernel: $(BUILD)/linux/arch/x86/boot/bzImage
@@ -165,11 +167,11 @@ $(BUILD)/glibc/Makefile: $(SRC)/glibc $(BUILD)/install/linux
 
 # build glibc
 $(BUILD)/glibc: $(BUILD)/glibc/Makefile
-	$(MAKE) -C $(BUILD)/glibc -j $(NUM_JOBS) && touch $@
+	$(MAKE) -C $(BUILD)/glibc && touch $@
 
 # install glibc
 $(BUILD)/install/glibc: $(BUILD)/glibc
-	$(MAKE) -C $(BUILD)/glibc DESTDIR=$@ install -j $(NUM_JOBS) && touch $@
+	$(MAKE) -C $(BUILD)/glibc DESTDIR=$@ install && touch $@
 
 ################################################################################
 # sysroot                                                                      #
@@ -193,7 +195,7 @@ SYSROOT_ESCAPED=$(subst /,\/,$(subst \,\\,$(SYSROOT)))
 
 # TODO: remove as many flags and recompile busybox to see which are actually needed
 
-BUSYBOX_MAKE=$(MAKE) -C $(SRC)/busybox O=$(BUILD)/busybox -j $(NUM_JOBS) CFLAGS="$(CFLAGS) -fomit-frame-pointer"
+BUSYBOX_MAKE=$(MAKE) -C $(SRC)/busybox O=$(BUILD)/busybox CFLAGS="$(CFLAGS) -fomit-frame-pointer"
 
 $(BUILD)/busybox/.config: $(SRC)/busybox $(SYSROOT)
 	mkdir -p $(@D) && rm -rf $(@D)/*
@@ -247,7 +249,7 @@ $(BUILD)/rootfs: $(SRC)/initfs $(BUILD)/busybox/busybox $(SYSROOT)
 	install -d -m 0555 $@/proc
 	install -d -m 0750 $@/root
 	install -d -m 0755 $@/run
-	install -d -m 0755 $@/sboot
+	install -d -m 0755 $@/sbin
 	install -d -m 0555 $@/sys
 	install -d -m 1777 $@/tmp
 	install -d -m 0755 $@/usr
@@ -255,7 +257,7 @@ $(BUILD)/rootfs: $(SRC)/initfs $(BUILD)/busybox/busybox $(SYSROOT)
 	install -d -m 0755 $@/usr/include
 	install -d -m 0755 $@/usr/lib
 	install -d -m 0755 $@/usr/lib32
-	install -d -m 0755 $@/usr/lib64
+	ln -s lib $@/usr/lib64
 	install -d -m 0755 $@/usr/sbin
 	install -d -m 0755 $@/usr/share
 	install -d -m 0755 $@/usr/share/man
