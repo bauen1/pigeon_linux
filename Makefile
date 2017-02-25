@@ -105,7 +105,7 @@ $(SRC)/$(SYSLINUX_DOWNLOAD_FILE):
 
 $(SRC)/syslinux: $(SRC)/$(SYSLINUX_DOWNLOAD_FILE)
 	rm -rf $@ && mkdir -p $@
-	tar -xvf $< -C $@ && touch $@
+	tar -xvf $< -C $@ --strip-components=1 && touch $@
 
 ################################################################################
 # Linux kernel                                                                 #
