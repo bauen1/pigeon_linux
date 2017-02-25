@@ -340,7 +340,7 @@ $(BUILD)/rootfs: $(SRC)/initfs $(BUILD)/busybox/busybox $(BUILD)/install/sinit \
 	cp $(BUILD)/busybox/busybox $@/bin/busybox
 	rsync -avr $(BUILD)/install/sinit/ $@/
 	rsync -avr $(BUILD)/install/ubase/ $@/
-	ln -s usr/sinit $@/init # link the init system
+	ln -s usr/bin/sinit $@/init # link the init system
 	# update the date on the directory itself
 	touch $@
 
