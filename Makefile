@@ -307,28 +307,30 @@ $(BUILD)/initrd.cpio.gz: $(BUILD)/initrd
 # live iso generation                                                          #
 ################################################################################
 
-$(BUILD)/iso: $(BUILD)/initrd.cpio.gz $(BUILD)/kernel $(SRC)/syslinux
+$(BUILD)/iso: $(BUILD)/initrd.cpio.gz $(BUILD)/kernel $(SRC)/syslinux \
+		$(SRC)/syslinux.cfg
 	rm -rf $@ && mkdir -p $@
 	cp $(BUILD)/initrd.cpio.gz $@/initrd.cpio.gz
 	cp $(BUILD)/kernel $@/kernel
 	cp $(SRC)/syslinux/bios/core/isolinux.bin $@/isolinux.bin
 	cp $(SRC)/syslinux/bios/com32/elflink/ldlinux/ldlinux.c32 $@/ldlinux.c32
 	mkdir -p $@/efi/boot # TODO: UEFI support
-	echo 'default kernel initrd=initrd.cpio.gz vga=ask' > $@/syslinux.cfg
+	#echo 'default kernel  initrd=initrd.cpio.gz vga=ask' > $@/syslinux.cfg
+	cp $(SRC)/syslinux.cfg $@/
 	touch $@
 
 $(BUILD)/pigeon_linux_live.iso: $(BUILD)/iso
-	genisoimage \
+	cd $< ; genisoimage \
 		-J \
 		-r \
-		-o "$@" \
-		-b $(BUILD)/iso/isolinux.bin \
-		-c $(BUILD)/iso/boot.cat \
+		-o $@ \
+		-b isolinux.bin \
+		-c boot.cat \
 		-input-charset UTF-8 \
 		-no-emul-boot \
 		-boot-load-size 4 \
 		-boot-info-table \
-		"$(BUILD)/iso"
+		$(BUILD)/iso
 
 
 ################################################################################

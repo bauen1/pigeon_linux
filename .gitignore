@@ -11,3 +11,4 @@ src/*
 !src/initfs
 !src/rootfs
 !src/filesystem
+!src/syslinux.cfg
