@@ -71,7 +71,7 @@ qemu_serial: $(BUILD)/initrd.img $(BUILD)/kernel
 
 # linux kernel
 
-LINUX_KERNEL_DOWNLOAD_FILE=linux-4.4.47.tar.xz
+LINUX_KERNEL_DOWNLOAD_FILE=linux-4.4.51.tar.xz
 LINUX_KERNEL_DOWNLOAD_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/$(LINUX_KERNEL_DOWNLOAD_FILE)
 
 $(SRC)/$(LINUX_KERNEL_DOWNLOAD_FILE):
@@ -83,7 +83,7 @@ $(SRC)/kernel: $(SRC)/$(LINUX_KERNEL_DOWNLOAD_FILE)
 
 # glibc
 
-GLIBC_DOWNLOAD_FILE=glibc-2.19.tar.xz
+GLIBC_DOWNLOAD_FILE=glibc-2.25.tar.xz
 GLIBC_DOWNLOAD_URL=https://ftp.gnu.org/gnu/libc/$(GLIBC_DOWNLOAD_FILE)
 
 $(SRC)/$(GLIBC_DOWNLOAD_FILE):
@@ -95,7 +95,7 @@ $(SRC)/glibc: $(SRC)/$(GLIBC_DOWNLOAD_FILE)
 
 # busybox
 
-BUSYBOX_DOWNLOAD_FILE=busybox-1.22.0.tar.bz2
+BUSYBOX_DOWNLOAD_FILE=busybox-1.26.2.tar.bz2
 BUSYBOX_DOWNLOAD_URL=http://busybox.net/downloads/$(BUSYBOX_DOWNLOAD_FILE)
 
 $(SRC)/$(BUSYBOX_DOWNLOAD_FILE):
@@ -153,7 +153,7 @@ $(BUILD)/glibc/Makefile: $(SRC)/glibc $(BUILD)/install/linux
 	cd "$(@D)" ; $(SRC)/glibc/configure \
 		--prefix= \
 		--with-headers="$(BUILD)/install/linux/usr/include" \
-		--with-kernel=3.2.0 \
+		--with-kernel=4.0.0 \
 		--without-gd \
 		--without-selinux \
 		--disable-werror \
