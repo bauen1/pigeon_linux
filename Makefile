@@ -278,10 +278,13 @@ $(BUILD)/rootfs: $(SRC)/initfs $(BUILD)/busybox/busybox $(SYSROOT)
 	install -d -m 1777 $@/var/tmp
 	# copy all the files in the sysroot over
 	#rsync -avr $(SYSROOT)/ $@/
-	cp --preserve=all $(SYSROOT)/lib/ld-linux* $@/lib64
-	cp --preserve=all $(SYSROOT)/lib/{libm.so.6,libc.so.6,libresolv.so.2,libnss_dns.so.2} $@/lib
+	cp $(SYSROOT)/lib/ld-linux* $@/lib
+	cp $(SYSROOT)/lib/libm.so.6 $@/lib
+	cp $(SYSROOT)/lib/libc.so.6 $@/lib
+	cp $(SYSROOT)/lib/libresolv.so.2 $@/lib
+	cp $(SYSROOT)/lib/libnss_dns.so.2 $@/lib
 	#rsync -avr $(BUILD)/busybox/busybox $@/bin/busybox
-	cp --preserve=all $(BUILD)/busybox/busybox $@/bin/busybox
+	cp $(BUILD)/busybox/busybox $@/bin/busybox
 	# update the date on the directory itself
 	touch $@
 
