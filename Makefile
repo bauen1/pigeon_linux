@@ -100,7 +100,7 @@ $(SRC)/busybox: $(SRC)/$(BUSYBOX_DOWNLOAD_FILE)
 SYSLINUX_DOWNLOAD_FILE=syslinux-6.03.tar.xz
 SYSLINUX_DOWNLOAD_URL=http://kernel.org/pub/linux/utils/boot/syslinux/$(SYSLINUX_DOWNLOAD_FILE)
 
-$(SRC)/$(SYSLINUX_DOWNLOAD_FILE)
+$(SRC)/$(SYSLINUX_DOWNLOAD_FILE):
 	rm -rf $@ && wget $(SYSLINUX_DOWNLOAD_URL)
 
 $(SRC)/syslinux: $(SRC)/$(SYSLINUX_DOWNLOAD_FILE)
