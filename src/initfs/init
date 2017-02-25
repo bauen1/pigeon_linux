@@ -1,14 +1,14 @@
 #!/bin/busybox ash
 
 # mount the core filesystems
-mount -t proc /proc /proc
-mount -t sysfs none /sys
-mount -t devtmpfs none /dev
-mkdir -p /dev/pts
-mount -t devpts devpts /dev/pts
+/bin/busybox mount -t proc /proc /proc
+/bin/busybox mount -t sysfs none /sys
+/bin/busybox mount -t devtmpfs none /dev
+/bin/busybox mkdir -p /dev/pts
+/bin/busybox mount -t devpts devpts /dev/pts
 
 # create the directories needed for installation of the applets
-mkdir -p /usr /usr/bin /usr/sbin
+/bin/busybox mkdir -p /usr /usr/bin /usr/sbin
 
 # install symlinks for all the applets
 /bin/busybox --install
