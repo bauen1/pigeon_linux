@@ -198,8 +198,9 @@ SYSROOT=$(BUILD)/sysroot
 
 # create a sysroot (headers and libraries)
 $(SYSROOT): $(BUILD)/install/linux $(BUILD)/install/glibc
-	mkdir -p $@ && rm -rf $@/*
+	rm -rf $@/ && mkdir -p $@
 	rsync -a $(BUILD)/install/glibc/ $@/
+	mkdir -p $@/usr
 	cd $@/usr ; \
 		ln -s ../include include ; \
 		ln -s ../lib lib
@@ -238,7 +239,7 @@ $(BUILD)/busybox/busybox: $(BUILD)/busybox/.config $(SYSROOT)
 
 $(BUILD)/sinit: $(SRC)/sinit $(SYSROOT)
 	rm -rf $@ && mkdir -p $@
-	cp -r $</ $@/
+	rsync -avr $</ $@/
 	$(MAKE) -C $(BUILD)/sinit all CFLAGS="$(CFLAGS) --sysroot=$(SYSROOT)" && touch $@
 
 $(BUILD)/install/sinit: $(BUILD)/sinit
@@ -251,7 +252,7 @@ $(BUILD)/install/sinit: $(BUILD)/sinit
 
 $(BUILD)/ubase: $(SRC)/ubase $(SYSROOT)
 	rm -rf $@ && mkdir -p $@
-	cp -r $</ $@/
+	rsync -avr $</ $@/
 	$(MAKE) -C $(BUILD)/ubase all CFLAGS="$(CFLAGS) --sysroot=$(SYSROOT)" && touch $@
 
 $(BUILD)/install/ubase: $(BUILD)/ubase
