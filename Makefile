@@ -124,7 +124,7 @@ $(SRC)/sinit: $(SRC)/$(SINIT_DOWNLOAD_FILE)
 # ubase (unportable base)
 
 $(SRC)/ubase:
-	rm -rf $@ && git clone http://git.suckless.org/ubase
+	rm -rf $@ && cd $(SRC) && git clone http://git.suckless.org/ubase
 
 ################################################################################
 # Linux kernel                                                                 #
