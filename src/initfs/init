@@ -1,14 +1,14 @@
 #!/bin/busybox ash
 
 # mount the core filesystems
-/bin/busybox mount -t proc /proc /proc
-/bin/busybox mount -t sysfs none /sys
-/bin/busybox mount -t devtmpfs none /dev
-/bin/busybox mkdir -p /dev/pts
-/bin/busybox mount -t devpts devpts /dev/pts
+mount -t proc /proc /proc
+mount -t sysfs none /sys
+mount -t devtmpfs none /dev
+mkdir -p /dev/pts
+mount -t devpts devpts /dev/pts
 
 # create the directories needed for installation of the applets
-/bin/busybox mkdir -p /usr /usr/bin /usr/sbin
+mkdir -p /usr /usr/bin /usr/sbin
 
 # install symlinks for all the applets
 /bin/busybox --install
@@ -32,12 +32,12 @@ export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 
 ###
 
-echo "trying to bring up eth0 "
-
-ifconfig eth0 up
-
-echo "trying to obtain a dhcp lease"
-
+#echo "trying to bring up eth0 "
+#
+#ifconfig eth0 up
+#
+#echo "trying to obtain a dhcp lease"
+#
 # TODO: move the script
 # udhcpc -t 5 -q -s /script.sh
 
