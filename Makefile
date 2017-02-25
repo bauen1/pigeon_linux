@@ -204,7 +204,9 @@ $(SYSROOT): $(BUILD)/install/linux $(BUILD)/install/glibc
 	cd $@/usr ; \
 		ln -s ../include include ; \
 		ln -s ../lib lib
-	rsync -a $(BUILD)/install/linux/ $@/
+	#rsync -a $(BUILD)/install/linux/ $@/
+	cp -r $(BUILD)/install/linux/usr/include $@/usr/include
+	cp -r $(BUILD)/install/linux/lib/* $@/lib/
 	touch $@
 
 ################################################################################
