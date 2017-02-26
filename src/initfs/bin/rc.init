@@ -33,7 +33,7 @@ export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 
 echo
 
-/bin/sh -c '/usr/bin/respawn /usr/bin/login -p root' &>/dev/null &
+/bin/sh -c '/usr/bin/respawn /bin/login -p root' &>/dev/null &
 /bin/sh -c '/usr/bin/respawn /usr/bin/getty /dev/tty2 linux' &>/dev/null &
 /bin/sh -c '/usr/bin/respawn /usr/bin/getty /dev/tty3 linux' &>/dev/null &
 /bin/sh -c '/usr/bin/respawn /usr/bin/getty /dev/tty4 linux' &>/dev/null &
