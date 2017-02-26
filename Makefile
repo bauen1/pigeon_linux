@@ -2,8 +2,8 @@
 
 # BIG LIST OF TODO AND FIXME
 # TODO: similar naming convention (src/kernel vs build/linux)
-# FIXME: copying of glibc sysroot is broken
-# FIXME: dynamically link busybox and actually make it work
+# TODO: Macros / Functions to make somewhat more readable code for the downloads
+# 	alternative, makepkg implementation
 
 ################################################################################
 # Variables                                                                    #
@@ -52,14 +52,11 @@ clean_src:
 .POHNY: qemu
 qemu: $(BUILD)/pigeon_linux_live.iso
 	# if you get a "write error no space left error" throw more ram at it
-	-sleep 1 && sync
 	qemu-system-x86_64 -m 64M -cdrom $< -boot d -vga std
 
 ################################################################################
 # Source downloading                                                           #
 ################################################################################
-
-# TODO: Macros / Functions to make somewhat more readable code
 
 # linux kernel
 
@@ -123,6 +120,7 @@ $(SRC)/sinit: $(SRC)/$(SINIT_DOWNLOAD_FILE)
 
 # ubase (unportable base)
 
+# FIXME: download link would be much better
 $(SRC)/ubase:
 	rm -rf $@ && cd $(SRC) && git clone http://git.suckless.org/ubase
 
@@ -142,6 +140,7 @@ $(SRC)/kbd: $(SRC)/$(KBD_DOWNLOAD_FILE)
 ################################################################################
 
 LINUX_KERNEL_MAKE=$(MAKE) -C $(SRC)/kernel O=$(BUILD)/linux
+KERNEL=$(BUILD)/linux/arch/x86/boot/bzImage
 
 # Generate the default config for the kernel
 $(BUILD)/linux/.config: $(SRC)/kernel
@@ -152,11 +151,8 @@ $(BUILD)/linux/.config: $(SRC)/kernel
 	touch $@
 
 # generate the kernel in the compressed self-extracting bzImage format
-$(BUILD)/linux/arch/x86/boot/bzImage: $(BUILD)/linux/.config
+$(KERNEL): $(BUILD)/linux/.config
 	$(LINUX_KERNEL_MAKE) bzImage
-
-$(BUILD)/kernel: $(BUILD)/linux/arch/x86/boot/bzImage
-	ln -s linux/arch/x86/boot/bzImage "$@"
 
 # install the kernel headers
 $(BUILD)/install/linux/usr/include: $(BUILD)/linux/.config
@@ -234,17 +230,17 @@ BUSYBOX_MAKE=$(MAKE) -C $(SRC)/busybox O=$(BUILD)/busybox CFLAGS="$(CFLAGS) -fom
 $(BUILD)/busybox/.config: $(SRC)/busybox $(SYSROOT)
 	mkdir -p $(@D) && rm -rf $(@D)/*
 	$(BUSYBOX_MAKE) defconfig
-	## For macOS, add '.bak' behind -i
-	## ( btw my congratulations if you compile this under macOS or BSD
-	## or something else than linux )
-	# enable static linking for the time being FIXME: get this to work
+	# enable static linking for the time being
 	# cd $(@D) && sed -i 's/.*CONFIG_STATIC.*/CONFIG_STATIC=y/g' .config
 	# dynamic linking rules!
 	##
 	cd $(@D) && sed -i 's/.*CONFIG_SYSROOT.*/CONFIG_SYSROOT="$(SYSROOT_ESCAPED)"/g' .config
 
-$(BUILD)/busybox/busybox: $(BUILD)/busybox/.config $(SYSROOT)
+$(BUILD)/busybox: $(BUILD)/busybox/.config $(SYSROOT)
 	$(BUSYBOX_MAKE) all && touch $@
+
+$(BUILD)/install/busybox: $(BUILD)/busybox
+	$(BUSYBOX_MAKE) CONFIG_PREFIX=$@ install
 
 ################################################################################
 # sinit                                                                        #
@@ -273,10 +269,14 @@ $(BUILD)/install/ubase: $(BUILD)/ubase
 	$(MAKE) -C $(BUILD)/sinit PREFIX=/usr DESTDIR=$@ install && touch $@
 
 ################################################################################
+# kbd                                                                          #
+################################################################################
+
+################################################################################
 # rootfs                                                                       #
 ################################################################################
 
-$(BUILD)/rootfs: $(SRC)/initfs $(BUILD)/busybox/busybox $(BUILD)/install/sinit \
+$(BUILD)/rootfs: $(SRC)/initfs $(BUILD)/install/busybox $(BUILD)/install/sinit \
 		$(BUILD)/install/ubase $(SYSROOT)
 	rm -rf $@ && mkdir -p $@
 	# create the basic filesystem layout
@@ -347,11 +347,12 @@ $(BUILD)/rootfs: $(SRC)/initfs $(BUILD)/busybox/busybox $(BUILD)/install/sinit \
 	cp $(SYSROOT)/lib/libc.so.6 $@/lib
 	cp $(SYSROOT)/lib/libresolv.so.2 $@/lib
 	cp $(SYSROOT)/lib/libnss_dns.so.2 $@/lib
-	#rsync -avr $(BUILD)/busybox/busybox $@/bin/busybox
-	cp $(BUILD)/busybox/busybox $@/bin/busybox
+	rsync -avr $(BUILD)/install/busybox/ $@/
 	rsync -avr $(BUILD)/install/sinit/ $@/
 	rsync -avr $(BUILD)/install/ubase/ $@/
-	ln -s usr/bin/sinit $@/init # link the init system
+	# link the init system
+	ln -s usr/bin/sinit $@/init
+	ln -s ../usr/bin/sinit $@/sbin/init
 	# update the date on the directory itself
 	touch $@
 
@@ -359,13 +360,13 @@ $(BUILD)/rootfs: $(SRC)/initfs $(BUILD)/busybox/busybox $(BUILD)/install/sinit \
 # initrd.cpio.gz                                                               #
 ################################################################################
 
-$(BUILD)/initrd: $(SRC)/initfs $(BUILD)/rootfs
+$(BUILD)/initramfs: $(SRC)/initfs $(BUILD)/rootfs
 	rm -rf $@ && mkdir -p $@
 	rsync -avr $(BUILD)/rootfs/ $@/
 	rsync -avr $(SRC)/initfs/ $@/
 	touch $@
 
-$(BUILD)/initrd.cpio.gz: $(BUILD)/initrd
+$(BUILD)/initrd.cpio.gz: $(BUILD)/initramfs
 	# pack the initramfs and make everything be owned by root
 	$(shell cd $< && find . | cpio -o -H newc -R 0:0 | gzip > $@ )
 
@@ -373,11 +374,11 @@ $(BUILD)/initrd.cpio.gz: $(BUILD)/initrd
 # live iso generation                                                          #
 ################################################################################
 
-$(BUILD)/iso: $(BUILD)/initrd.cpio.gz $(BUILD)/kernel $(SRC)/syslinux \
+$(BUILD)/iso: $(BUILD)/initrd.cpio.gz $(KERNEL) $(SRC)/syslinux \
 		$(SRC)/syslinux.cfg
 	rm -rf $@ && mkdir -p $@
 	cp $(BUILD)/initrd.cpio.gz $@/initrd.cpio.gz
-	cp $(BUILD)/kernel $@/kernel
+	cp $(KERNEL) $@/kernel
 	cp $(SRC)/syslinux/bios/core/isolinux.bin $@/isolinux.bin
 	cp $(SRC)/syslinux/bios/com32/elflink/ldlinux/ldlinux.c32 $@/ldlinux.c32
 	mkdir -p $@/efi/boot # TODO: UEFI support
@@ -397,7 +398,6 @@ $(BUILD)/pigeon_linux_live.iso: $(BUILD)/iso
 		-boot-load-size 4 \
 		-boot-info-table \
 		$(BUILD)/iso
-
 
 ################################################################################
 #                                                                              #
