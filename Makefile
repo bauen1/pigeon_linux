@@ -143,9 +143,9 @@ GROFF_DOWNLOAD_URL=https://ftp.gnu.org/gnu/groff/$(GROFF_DOWNLOAD_FILE)
 $(SRC)/$(GROFF_DOWNLOAD_FILE):
 	rm -rf $@ && wget $(GROFF_DOWNLOAD_URL) -O $@
 
-$(SRC)/groff
+$(SRC)/groff: $(SRC)/$(GROFF_DOWNLOAD_FILE)
 	rm -rf $@ && mkdir -p $@
-	tar -xvg $< -C $@ --strip-components=1 && touch $@
+	tar -xvf $< -C $@ --strip-components=1 && touch $@
 
 ################################################################################
 # Linux kernel                                                                 #
