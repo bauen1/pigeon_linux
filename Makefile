@@ -16,6 +16,10 @@ DOCS ?=$(PWD)/docs
 # Optimize for size, strip, protect against bad implementations
 CFLAGS ?=-Os -s -U_FORTIFY_SOURCE
 
+NUM_JOBS=8
+
+MAKE="$(MAKE) -j $(NUM_JOBS)"
+
 ################################################################################
 # Special Targets                                                              #
 ################################################################################
@@ -32,9 +36,6 @@ info:
 	@echo "	                "
 	@echo "	qemu            "
 	@echo "	                "
-	@echo "To speed up compiling it is recommended that you pass: "
-	@echo "-j <number of cpu cores>"
-	@echo "to this Makefile"
 
 .PHONY: all
 all: qemu
