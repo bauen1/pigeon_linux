@@ -412,6 +412,7 @@ $(BUILD)/rootfs: $(SRC)/initfs $(BUILD)/install/busybox $(BUILD)/install/sinit \
 	cp $(SYSROOT)/lib/ld-linux* $@/lib
 	cp $(SYSROOT)/lib/libm.so.6 $@/lib
 	cp $(SYSROOT)/lib/libc.so.6 $@/lib
+	cp $(SYSROOT)/lib/libcrypt.so.1 $@/lib
 	cp $(SYSROOT)/lib/libresolv.so.2 $@/lib
 	cp $(SYSROOT)/lib/libnss_dns.so.2 $@/lib
 	cp -r $(BUILD)/install/linux/lib/* $@/lib/

@@ -7,7 +7,6 @@
 Keymaps are available under /usr/share/kbd/keymaps/i386/
 Once you have found the one you need for your keyboard, load it by typing:
 % loadkeys <keymap>
-Some common choosen onces are:
+Some examples:
 us
 de
-de-latin1-nodeadkeys

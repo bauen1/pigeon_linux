@@ -42,8 +42,14 @@ export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 
 ###
 
-cat /etc/motd
-echo ""
-echo "Dropping you in a shell - have fun"
 # Start a (job-controlling) shell
-exec setsid sh -c 'exec sh </dev/tty1 >/dev/tty1 2>&1'
+#exec setsid sh -c 'exec sh </dev/tty1 >/dev/tty1 2>&1'
+
+touch /var/run/utmp
+
+echo
+
+/bin/sh -c '/usr/bin/respawn /usr/bin/getty /dev/tty1 linux' &>/dev/null &
+/bin/sh -c '/usr/bin/respawn /usr/bin/getty /dev/tty2 linux' &>/dev/null &
+/bin/sh -c '/usr/bin/respawn /usr/bin/getty /dev/tty3 linux' &>/dev/null &
+/bin/sh -c '/usr/bin/respawn /usr/bin/getty /dev/tty4 linux' &>/dev/null &
