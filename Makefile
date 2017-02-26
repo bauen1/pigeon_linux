@@ -273,12 +273,24 @@ $(BUILD)/install/ubase: $(BUILD)/ubase
 # kbd                                                                          #
 ################################################################################
 
+$(BUILD)/kbd/Makefile: $(SRC)/kbd $(SYSROOT)
+	rm -rf $@ && mkdir -p $@
+	$(SRC)/kbd/configure --prefix=/usr --with-sysroot=$(SYSROOT) \
+		--datadir=/usr/share/kbd --mandir=/usr/share/man
+
+$(BUILD)/kbd: $(BUILD)/kbd/Makefile $(SYSROOT)
+	$(MAKE) -C $(BUILD)/kbd all && touch $@
+
+$(BUILD)/install/kbd: $(BUILD)/kbd
+	rm -rf $@ && mkdir -p $@
+	$(MAKE) -C $(BUILD)/kbd DESTDIR=$@ install && touch $@
+
 ################################################################################
 # rootfs                                                                       #
 ################################################################################
 
 $(BUILD)/rootfs: $(SRC)/initfs $(BUILD)/install/busybox $(BUILD)/install/sinit \
-		$(BUILD)/install/ubase $(SYSROOT)
+		$(BUILD)/install/ubase $(SYSROOT) $(BUILD)/install/kbd
 	rm -rf $@ && mkdir -p $@
 	# create the basic filesystem layout
 	# please keep these sorted
@@ -348,12 +360,13 @@ $(BUILD)/rootfs: $(SRC)/initfs $(BUILD)/install/busybox $(BUILD)/install/sinit \
 	cp $(SYSROOT)/lib/libc.so.6 $@/lib
 	cp $(SYSROOT)/lib/libresolv.so.2 $@/lib
 	cp $(SYSROOT)/lib/libnss_dns.so.2 $@/lib
-	rsync -avr $(BUILD)/install/busybox/ $@/
+	rsync -avr $(BUILD)/install/kbd/ $@/
 	rsync -avr $(BUILD)/install/sinit/ $@/
 	rsync -avr $(BUILD)/install/ubase/ $@/
 	# link the init system
 	ln -sf usr/bin/sinit $@/init
 	ln -sf ../usr/bin/sinit $@/sbin/init
+	rsync -avr --ignore-existing $(BUILD)/install/busybox/ $@/
 	# update the date on the directory itself
 	touch $@
 
