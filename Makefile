@@ -290,7 +290,7 @@ $(BUILD)/ubase: $(SRC)/ubase $(SYSROOT)
 
 $(BUILD)/install/ubase: $(BUILD)/ubase
 	rm -rf $@ && mkdir -p $@
-	$(MAKE) -C $(BUILD)/sinit PREFIX=/usr DESTDIR=$@ install && touch $@
+	$(MAKE) -C $(BUILD)/ubase PREFIX=/usr DESTDIR=$@ install && touch $@
 
 ################################################################################
 # kbd                                                                          #
@@ -344,7 +344,7 @@ $(BUILD)/install/dosfstools: $(BUILD)/dosfstools
 
 $(BUILD)/rootfs: $(SRC)/initfs $(BUILD)/install/busybox $(BUILD)/install/sinit \
 		$(BUILD)/install/ubase $(SYSROOT) $(BUILD)/install/kbd \
-		$(BUILD)/install/dosfstools
+		$(BUILD)/install/dosfstools $(BUILD)/install/linux
 	rm -rf $@ && mkdir -p $@
 	# create the basic filesystem layout
 	# please keep these sorted
@@ -414,6 +414,7 @@ $(BUILD)/rootfs: $(SRC)/initfs $(BUILD)/install/busybox $(BUILD)/install/sinit \
 	cp $(SYSROOT)/lib/libc.so.6 $@/lib
 	cp $(SYSROOT)/lib/libresolv.so.2 $@/lib
 	cp $(SYSROOT)/lib/libnss_dns.so.2 $@/lib
+	cp -r $(BUILD)/install/linux/lib/* $@/lib/
 	rsync -avr $(BUILD)/install/dosfstools/ $@/
 	rsync -avr $(BUILD)/install/kbd/ $@/
 	rsync -avr $(BUILD)/install/sinit/ $@/

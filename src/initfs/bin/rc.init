@@ -8,6 +8,8 @@ mkdir -p /dev/pts
 mount -t devpts devpts /dev/pts
 mount -t tmpfs -o nosuid /tmp /tmp
 
+dmesg -n 3 # hide all kernel messages execpt for errors and worse
+
 clear
 
 ###
@@ -16,6 +18,8 @@ clear
 [ -f /etc/hostname ] && HOSTNAME="$(cat /etc/hostname)"
 # and default to "localhost"
 [ -z "$HOSTNAME" ] && HOSTNAME=localhost
+
+echo "Setting hostname to '$HOSTNAME'"
 
 hostname "$HOSTNAME"
 
@@ -38,11 +42,8 @@ export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 
 ###
 
-echo -e "\e[97m"
 cat /etc/motd
 echo ""
 echo "Dropping you in a shell - have fun"
-echo -e "\e[0m"
-
 # Start a (job-controlling) shell
 exec setsid sh -c 'exec sh </dev/tty1 >/dev/tty1 2>&1'
