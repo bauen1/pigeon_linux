@@ -137,13 +137,25 @@ $(SRC)/kbd: $(SRC)/$(KBD_DOWNLOAD_FILE)
 	tar -xvf $< -C $@ --strip-components=1 && touch $@
 
 # groff (to make man work)
-GROFF_DOWNLOAD_FILE=groff-1.22.3.tar.gz
-GROFF_DOWNLOAD_URL=https://ftp.gnu.org/gnu/groff/$(GROFF_DOWNLOAD_FILE)
+#GROFF_DOWNLOAD_FILE=groff-1.22.3.tar.gz
+#GROFF_DOWNLOAD_URL=https://ftp.gnu.org/gnu/groff/$(GROFF_DOWNLOAD_FILE)
+#
+#$(SRC)/$(GROFF_DOWNLOAD_FILE):
+#	rm -rf $@ && wget $(GROFF_DOWNLOAD_URL) -O $@
+#
+#$(SRC)/groff: $(SRC)/$(GROFF_DOWNLOAD_FILE)
+#	rm -rf $@ && mkdir -p $@
+#	tar -xvf $< -C $@ --strip-components=1 && touch $@
 
-$(SRC)/$(GROFF_DOWNLOAD_FILE):
-	rm -rf $@ && wget $(GROFF_DOWNLOAD_URL) -O $@
+# dosfstools
 
-$(SRC)/groff: $(SRC)/$(GROFF_DOWNLOAD_FILE)
+DOSFSTOOLS_DOWNLOAD_FILE=dosfstools-4.1.tar.xz
+DOSFSTOOLS_DOWNLOAD_URL=https://github.com/dosfstools/dosfstools/releases/download/v4.1/$(DOSFSTOOLS_DOWNLOAD_FILE)
+
+$(SRC)/$(DOSFSTOOLS_DOWNLOAD_FILE):
+	rm -rf $@ && wget $(DOSFSTOOLS_DOWNLOAD_URL) -O $@
+
+$(SRC)/dosfstools: $(SRC)/$(DOSFSTOOLS_DOWNLOAD_FILE)
 	rm -rf $@ && mkdir -p $@
 	tar -xvf $< -C $@ --strip-components=1 && touch $@
 
@@ -177,7 +189,7 @@ $(BUILD)/install/linux/lib: $(BUILD)/linux/.config
 	mkdir -p $@ && rm -rf $@/* && mkdir -p $@/modules $@/firmware
 	$(LINUX_KERNEL_MAKE) modules
 	$(LINUX_KERNEL_MAKE) INSTALL_MOD_PATH=$(BUILD)/install/linux modules_install
-	#$(LINUX_KERNEL_MAKE) INSTALL_FW_PATH=$(BUILD)/install/linux/lib/firmware firmware_install
+	$(LINUX_KERNEL_MAKE) INSTALL_FW_PATH=$(BUILD)/install/linux/lib/firmware firmware_install
 	touch $@
 
 $(BUILD)/install/linux: $(BUILD)/install/linux/usr/include $(BUILD)/install/linux/lib
@@ -297,11 +309,42 @@ $(BUILD)/install/kbd: $(BUILD)/kbd
 	$(MAKE) -C $(BUILD)/kbd DESTDIR=$@ install && touch $@
 
 ################################################################################
+# groff                                                                        #
+################################################################################
+#
+#$(BUILD)/groff/Makefile: $(SRC)/groff $(SYSROOT)
+#	rm -rf $(@D) && mkdir -p $(@D)
+#	cd $(@D) && $(SRC)/groff/configure --prefx=/usr CFLAGS="--sysroot=$(SYSROOT) $(CFLAGS)"
+#
+
+################################################################################
+# dosfstools                                                                   #
+################################################################################
+
+$(BUILD)/dosfstools/Makefile: $(SRC)/dosfstools $(SYSROOT)
+	rm -rf $(@D) && mkdir -p $(@D)
+	cd $(@D) && $(SRC)/dosfstools/configure \
+		--enable-compat-symlinks \
+		--without-udev \
+		--prefix=/usr \
+		--libexecdir=/usr/lib \
+		--mandir=/usr/share/man \
+		--docdir=/usr/share/doc/dosfstools \
+		CFLAGS="--sysroot=$(SYSROOT) $(CFLAGS)"
+
+$(BUILD)/dosfstools: $(BUILD)/dosfstools/Makefile
+	$(MAKE) -C $(BUILD)/dosfstools all && touch $@
+
+$(BUILD)/install/dosfstools: $(BUILD)/dosfstools
+	$(MAKE) -C $(BUILD)/dosfstools DESTDIR=$@ install && touch $@
+
+################################################################################
 # rootfs                                                                       #
 ################################################################################
 
 $(BUILD)/rootfs: $(SRC)/initfs $(BUILD)/install/busybox $(BUILD)/install/sinit \
-		$(BUILD)/install/ubase $(SYSROOT) $(BUILD)/install/kbd
+		$(BUILD)/install/ubase $(SYSROOT) $(BUILD)/install/kbd \
+		$(BUILD)/install/dosfstools
 	rm -rf $@ && mkdir -p $@
 	# create the basic filesystem layout
 	# please keep these sorted
@@ -378,6 +421,7 @@ $(BUILD)/rootfs: $(SRC)/initfs $(BUILD)/install/busybox $(BUILD)/install/sinit \
 	ln -sf usr/bin/sinit $@/init
 	ln -sf ../usr/bin/sinit $@/sbin/init
 	rsync -avr --ignore-existing $(BUILD)/install/busybox/ $@/
+	rm -f $@/linuxrc
 	# update the date on the directory itself
 	touch $@
 
