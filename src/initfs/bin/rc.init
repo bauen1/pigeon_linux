@@ -29,27 +29,11 @@ export HOSTNAME=$HOSTNAME
 
 export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 
-###
-
-#echo "trying to bring up eth0 "
-#
-#ifconfig eth0 up
-#
-#echo "trying to obtain a dhcp lease"
-#
-# TODO: move the script
-# udhcpc -t 5 -q -s /script.sh
-
-###
-
-# Start a (job-controlling) shell
-#exec setsid sh -c 'exec sh </dev/tty1 >/dev/tty1 2>&1'
-
-touch /var/run/utmp
+##
 
 echo
 
-/bin/sh -c '/usr/bin/respawn /usr/bin/login -p root /dev/tty1 linux' &>/dev/null &
+/bin/sh -c '/usr/bin/respawn /usr/bin/login -p root' &>/dev/null &
 /bin/sh -c '/usr/bin/respawn /usr/bin/getty /dev/tty2 linux' &>/dev/null &
 /bin/sh -c '/usr/bin/respawn /usr/bin/getty /dev/tty3 linux' &>/dev/null &
 /bin/sh -c '/usr/bin/respawn /usr/bin/getty /dev/tty4 linux' &>/dev/null &
