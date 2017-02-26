@@ -1,5 +1,7 @@
 #!/bin/sh
 
+export PATH=/usr/bin:/bin:/usr/sbin:/sbin
+
 # mount the core filesystems
 mount -t proc -o nosuid,noexec,nodev /proc /proc
 mount -t sysfs -o nosuid,noexec,nodev  /sys /sys
@@ -9,10 +11,6 @@ mount -t devpts devpts /dev/pts
 mount -t tmpfs -o nosuid /tmp /tmp
 
 dmesg -n 3 # hide all kernel messages execpt for errors and worse
-
-clear
-
-###
 
 # Grab the hostname from /etc/hostname if it exists
 [ -f /etc/hostname ] && HOSTNAME="$(cat /etc/hostname)"
@@ -25,17 +23,10 @@ hostname "$HOSTNAME"
 
 export HOSTNAME=$HOSTNAME
 
-###
-
-export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
-
-##
-
-echo
-
-/bin/sh -c '/usr/bin/respawn /usr/bin/getty /dev/tty2 linux' &>/dev/null &
-/bin/sh -c '/usr/bin/respawn /usr/bin/getty /dev/tty3 linux' &>/dev/null &
-/bin/sh -c '/usr/bin/respawn /usr/bin/getty /dev/tty4 linux' &>/dev/null &
+clear
 
 # try to spawn a auto login terminal for root on tty1
 setsid /bin/sh -c 'exec /usr/bin/respawn /bin/login -p root </dev/tty1 >/dev/tty1 2>&1' &>/dev/null &
+/usr/bin/respawn /usr/bin/getty /dev/tty2 linux &>/dev/null &
+/usr/bin/respawn /usr/bin/getty /dev/tty3 linux &>/dev/null &
+/usr/bin/respawn /usr/bin/getty /dev/tty4 linux &>/dev/null &

@@ -342,7 +342,7 @@ $(BUILD)/install/dosfstools: $(BUILD)/dosfstools
 # rootfs                                                                       #
 ################################################################################
 
-$(BUILD)/rootfs: $(SRC)/initfs $(BUILD)/install/busybox $(BUILD)/install/sinit \
+$(BUILD)/rootfs: $(BUILD)/install/busybox $(BUILD)/install/sinit \
 		$(BUILD)/install/ubase $(SYSROOT) $(BUILD)/install/kbd \
 		$(BUILD)/install/dosfstools $(BUILD)/install/linux
 	rm -rf $@ && mkdir -p $@
