@@ -22,9 +22,9 @@ esac
 
 case "$1" in
   reboot)
-    /bin/halt -r
+    /usr/bin/halt -r
     ;;
   poweroff)
-    /bin/halt -p
+    /usr/bin/halt -p
     ;;
 esac
