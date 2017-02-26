@@ -274,8 +274,8 @@ $(BUILD)/install/ubase: $(BUILD)/ubase
 ################################################################################
 
 $(BUILD)/kbd/Makefile: $(SRC)/kbd $(SYSROOT)
-	rm -rf $@ && mkdir -p $@
-	$(SRC)/kbd/configure --prefix=/usr --with-sysroot=$(SYSROOT) \
+	rm -rf $(@D) && mkdir -p $(@D)
+	cd $(@D) && $(SRC)/kbd/configure --prefix=/usr --with-sysroot=$(SYSROOT) \
 		--datadir=/usr/share/kbd --mandir=/usr/share/man
 
 $(BUILD)/kbd: $(BUILD)/kbd/Makefile $(SYSROOT)
