@@ -126,6 +126,17 @@ $(SRC)/sinit: $(SRC)/$(SINIT_DOWNLOAD_FILE)
 $(SRC)/ubase:
 	rm -rf $@ && cd $(SRC) && git clone http://git.suckless.org/ubase
 
+# kbd (linux keyboard tools)
+KBD_DOWNLOAD_FILE=kbd-2.0.4.tar.xz
+KBD_DOWNLOAD_URL=https://www.kernel.org/pub/linux/utils/kbd/$(KBD_DOWNLOAD_FILE)
+
+$(SRC)/$(KBD_DOWNLOAD_FILE):
+	rm -rf $@ && wget $(KBD_DOWNLOAD_URL) -O $@
+
+$(SRC)/kbd: $(SRC)/$(KBD_DOWNLOAD_FILE)
+	rm -rf $@ && mkdir -p $@
+	tar -xvf $< -C $@ --strip-components=1 && touch $@
+
 ################################################################################
 # Linux kernel                                                                 #
 ################################################################################
