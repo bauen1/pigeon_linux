@@ -414,6 +414,7 @@ $(BUILD)/rootfs: $(SRC)/initfs $(BUILD)/install/busybox $(BUILD)/install/sinit \
 	cp $(SYSROOT)/lib/libc.so.6 $@/lib
 	cp $(SYSROOT)/lib/libresolv.so.2 $@/lib
 	cp $(SYSROOT)/lib/libnss_dns.so.2 $@/lib
+	rsync -avr $(BUILD)/install/dosfstools/ $@/
 	rsync -avr $(BUILD)/install/kbd/ $@/
 	rsync -avr $(BUILD)/install/sinit/ $@/
 	rsync -avr $(BUILD)/install/ubase/ $@/
@@ -451,7 +452,6 @@ $(BUILD)/iso: $(BUILD)/initrd.cpio.gz $(KERNEL) $(SRC)/syslinux \
 	cp $(SRC)/syslinux/bios/core/isolinux.bin $@/isolinux.bin
 	cp $(SRC)/syslinux/bios/com32/elflink/ldlinux/ldlinux.c32 $@/ldlinux.c32
 	mkdir -p $@/efi/boot # TODO: UEFI support
-	#echo 'default kernel  initrd=initrd.cpio.gz vga=ask' > $@/syslinux.cfg
 	cp $(SRC)/syslinux.cfg $@/
 	touch $@
 
