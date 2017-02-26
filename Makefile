@@ -18,7 +18,7 @@ CFLAGS ?=-Os -s -U_FORTIFY_SOURCE
 
 NUM_JOBS=8
 
-MAKE="$(MAKE) -j $(NUM_JOBS)"
+MAKE="make -j $(NUM_JOBS)"
 
 ################################################################################
 # Special Targets                                                              #
