@@ -13,6 +13,10 @@ case "$1" in
     ;;
 esac
 
+/usr/bin/killall5 -s TERM
+/bin/sleep 3 # you have 3 seconds to save your stuff
+/usr/bin/killall5 -s KILL # 9 is coming after your processes now
+
 /bin/umount -a
 /bin/sync
 

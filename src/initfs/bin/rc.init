@@ -49,7 +49,7 @@ touch /var/run/utmp
 
 echo
 
-/bin/sh -c '/usr/bin/respawn /usr/bin/getty /dev/tty1 linux' &>/dev/null &
+/bin/sh -c '/usr/bin/respawn /usr/bin/login -p root /dev/tty1 linux' &>/dev/null &
 /bin/sh -c '/usr/bin/respawn /usr/bin/getty /dev/tty2 linux' &>/dev/null &
 /bin/sh -c '/usr/bin/respawn /usr/bin/getty /dev/tty3 linux' &>/dev/null &
 /bin/sh -c '/usr/bin/respawn /usr/bin/getty /dev/tty4 linux' &>/dev/null &
