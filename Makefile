@@ -29,16 +29,16 @@ MAKE=make -j $(NUM_JOBS)
 info:
 	@echo "targets:         "
 	@echo "	                "
-	@echo "	all             "
+	@echo "	all             build the livecd iso file"
 	@echo "	                "
-	@echo "	clean           "
-	@echo "	clean_src       "
+	@echo "	clean           clean build/*"
+	@echo "	clean_src       clean all downloads"
 	@echo "	                "
-	@echo "	qemu            "
+	@echo "	qemu            run qemu with the livecd"
 	@echo "	                "
 
 .PHONY: all
-all: qemu
+all: $(BUILD)/pigeon_linux_live.iso
 
 .PHONY: clean
 clean:
@@ -135,17 +135,6 @@ $(SRC)/$(KBD_DOWNLOAD_FILE):
 $(SRC)/kbd: $(SRC)/$(KBD_DOWNLOAD_FILE)
 	rm -rf $@ && mkdir -p $@
 	tar -xvf $< -C $@ --strip-components=1 && touch $@
-
-# groff (to make man work)
-#GROFF_DOWNLOAD_FILE=groff-1.22.3.tar.gz
-#GROFF_DOWNLOAD_URL=https://ftp.gnu.org/gnu/groff/$(GROFF_DOWNLOAD_FILE)
-#
-#$(SRC)/$(GROFF_DOWNLOAD_FILE):
-#	rm -rf $@ && wget $(GROFF_DOWNLOAD_URL) -O $@
-#
-#$(SRC)/groff: $(SRC)/$(GROFF_DOWNLOAD_FILE)
-#	rm -rf $@ && mkdir -p $@
-#	tar -xvf $< -C $@ --strip-components=1 && touch $@
 
 # dosfstools
 
@@ -309,15 +298,6 @@ $(BUILD)/install/kbd: $(BUILD)/kbd
 	$(MAKE) -C $(BUILD)/kbd DESTDIR=$@ install && touch $@
 
 ################################################################################
-# groff                                                                        #
-################################################################################
-#
-#$(BUILD)/groff/Makefile: $(SRC)/groff $(SYSROOT)
-#	rm -rf $(@D) && mkdir -p $(@D)
-#	cd $(@D) && $(SRC)/groff/configure --prefx=/usr CFLAGS="--sysroot=$(SYSROOT) $(CFLAGS)"
-#
-
-################################################################################
 # dosfstools                                                                   #
 ################################################################################
 
@@ -348,65 +328,77 @@ $(BUILD)/rootfs: $(BUILD)/install/busybox $(BUILD)/install/sinit \
 	rm -rf $@ && mkdir -p $@
 	# create the basic filesystem layout
 	# please keep these sorted
-	install -d -m 0755 $@/bin
+	#
+	# Create the directory layout
+	ln -s usr/bin $@/bin
 	install -d -m 0755 $@/boot
 	install -d -m 0755 $@/dev
 	install -d -m 0755 $@/dev/pts
 	install -d -m 0755 $@/dev/shm
 	install -d -m 0755 $@/etc
-	install -m 0644 $(SRC)/filesystem/etc/fstab $@/etc/fstab
-	install -m 0644 $(SRC)/filesystem/etc/group $@/etc/group
-	install -m 0600 $(SRC)/filesystem/etc/gshadow $@/etc/gshadow
-	install -m 0644 $(SRC)/filesystem/etc/issue $@/etc/issue
-	install -m 0644 $(SRC)/filesystem/etc/motd $@/etc/motd
+	install -d -m 0755 $@/etc/opt
 	ln -s ../proc/self/mounts $@/etc/mtab
-	install -m 0644 $(SRC)/filesystem/etc/os-version $@/etc/os-version
-	install -m 0644 $(SRC)/filesystem/etc/passwd $@/etc/passwd
-	install -m 0644 $(SRC)/filesystem/etc/securetty $@/etc/securetty
-	install -m 0600 $(SRC)/filesystem/etc/shadow $@/etc/shadow
-	install -m 0644 $(SRC)/filesystem/etc/shells $@/etc/shells
 	install -d -m 0755 $@/home
-	install -d -m 0755 $@/lib
-	install -d -m 0755 $@/lib/modules
-	install -d -m 0755 $@/lib32
-	ln -s lib $@/lib64
+	ln -s usr/lib $@/lib
+	ln -s usr/lib $@/lib64
+	install -d -m 0755 $@/media
 	install -d -m 0755 $@/mnt
 	install -d -m 0755 $@/opt
-	install -d -m 0755 $@/opt/bin
-	install -d -m 0755 $@/opt/sbin
 	install -d -m 0555 $@/proc
 	install -d -m 0750 $@/root
 	install -d -m 0755 $@/run
-	install -d -m 0755 $@/sbin
+	ln -s usr/sbin $@/sbin
 	install -d -m 0555 $@/sys
 	install -d -m 1777 $@/tmp
 	install -d -m 0755 $@/usr
 	install -d -m 0755 $@/usr/bin
 	install -d -m 0755 $@/usr/include
 	install -d -m 0755 $@/usr/lib
-	install -d -m 0755 $@/usr/lib32
+	#install -d -m 0755 $@/usr/lib32
 	ln -s lib $@/usr/lib64
+	# Note: please use lib instead of libexec
+	install -d -m 0755 $@/usr/local
+	install -d -m 0755 $@/usr/local/bin
+	install -d -m 0755 $@/usr/local/etc
+	install -d -m 0755 $@/usr/local/games
+	install -d -m 0755 $@/usr/local/include
+	install -d -m 0755 $@/usr/local/lib
+	ln -s lib $@/usr/local/lib64
+	install -d -m 0755 $@/usr/local/man
+	install -d -m 0755 $@/usr/local/sbin
+	install -d -m 0755 $@/usr/local/share
+	install -d -m 0755 $@/usr/local/src
 	install -d -m 0755 $@/usr/sbin
 	install -d -m 0755 $@/usr/share
 	install -d -m 0755 $@/usr/share/man
 	install -d -m 0755 $@/usr/share/man/man{1,2,3,4,5,6,7,8}
+	install -d -m 0755 $@/usr/share/misc
 	install -d -m 0755 $@/usr/src
-	install -d -m 0755 $@/usr/var
 	install -d -m 0755 $@/var
 	install -d -m 0755 $@/var/cache
-	install -d -m 0755 $@/var/empty
-	install -d -m 0755 $@/var/ftp
 	install -d -m 0755 $@/var/lib
-	install -d -m 0755 $@/var/lib/pkg
 	install -d -m 0755 $@/var/lock
 	install -d -m 0755 $@/var/log
-	install -d -m 0755 $@/var/log/old
 	ln -s spool/mail $@/var/mail
-	install -d -m 0755 $@/var/run
-	install -d -m 0755 $@/var/run/utmp
+	install -d -m 0755 $@/var/opt
+	ln -s ../run $@/var/run
 	install -d -m 0755 $@/var/spool
+	install -d -m 0755 $@/var/spool/cron
 	install -d -m 1777 $@/var/spool/mail
 	install -d -m 1777 $@/var/tmp
+	#
+	#
+	# install the files
+	install -m 0644 $(SRC)/filesystem/etc/fstab $@/etc/fstab
+	install -m 0644 $(SRC)/filesystem/etc/group $@/etc/group
+	install -m 0600 $(SRC)/filesystem/etc/gshadow $@/etc/gshadow
+	install -m 0644 $(SRC)/filesystem/etc/issue $@/etc/issue
+	install -m 0644 $(SRC)/filesystem/etc/motd $@/etc/motd
+	install -m 0644 $(SRC)/filesystem/etc/os-version $@/etc/os-version
+	install -m 0644 $(SRC)/filesystem/etc/passwd $@/etc/passwd
+	install -m 0644 $(SRC)/filesystem/etc/securetty $@/etc/securetty
+	install -m 0600 $(SRC)/filesystem/etc/shadow $@/etc/shadow
+	install -m 0644 $(SRC)/filesystem/etc/shells $@/etc/shells
 	# copy all the files in the sysroot over
 	#rsync -avr $(SYSROOT)/ $@/
 	cp $(SYSROOT)/lib/ld-linux* $@/lib
