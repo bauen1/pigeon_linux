@@ -427,7 +427,7 @@ $(BUILD)/rootfs: $(BUILD)/install/busybox $(BUILD)/install/sinit \
 $(BUILD)/initramfs: $(SRC)/initfs $(BUILD)/rootfs
 	rm -rf $@ && mkdir -p $@
 	rsync -avr $(BUILD)/rootfs/ $@/
-	rsync -avr $(SRC)/initfs/ $@/
+	rsync -avrK $(SRC)/initfs/ $@/
 	touch $@
 
 $(BUILD)/initrd.cpio.gz: $(BUILD)/initramfs
