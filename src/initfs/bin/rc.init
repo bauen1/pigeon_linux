@@ -25,8 +25,9 @@ export HOSTNAME=$HOSTNAME
 
 clear
 
+# TODO: find a way to do this without having to spawn two shells for each tty
 # try to spawn a auto login terminal for root on tty1
-setsid /bin/sh -c 'exec /usr/bin/respawn /bin/login -p root </dev/tty1 >/dev/tty1 2>&1' &>/dev/null &
-/usr/bin/respawn /usr/bin/getty /dev/tty2 linux &>/dev/null &
-/usr/bin/respawn /usr/bin/getty /dev/tty3 linux &>/dev/null &
-/usr/bin/respawn /usr/bin/getty /dev/tty4 linux &>/dev/null &
+setsid sh -c 'while true; do login -p root </dev/tty1 >/dev/tty1 2>&1; done' &>/dev/null &
+sh -c '(while true; do getty 0 /dev/tty2; done)' &>/dev/null &
+sh -c '(while true; do getty 0 /dev/tty3; done)' &>/dev/null &
+sh -c '(while true; do getty 0 /dev/tty4; done)' &>/dev/null &

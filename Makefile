@@ -122,8 +122,8 @@ $(SRC)/sinit: $(SRC)/$(SINIT_DOWNLOAD_FILE)
 # ubase (unportable base)
 
 # FIXME: download link would be much better
-$(SRC)/ubase:
-	rm -rf $@ && cd $(SRC) && git clone http://git.suckless.org/ubase
+#$(SRC)/ubase:
+#	rm -rf $@ && cd $(SRC) && git clone http://git.suckless.org/ubase
 
 # kbd (linux keyboard tools)
 KBD_DOWNLOAD_FILE=kbd-2.0.4.tar.xz
@@ -271,16 +271,16 @@ $(BUILD)/install/sinit: $(BUILD)/sinit
 ################################################################################
 # ubase                                                                        #
 ################################################################################
-
-$(BUILD)/ubase: $(SRC)/ubase $(SYSROOT)
-	rm -rf $@ && mkdir -p $@
-	rsync -avr $</ $@/
-	$(MAKE) -C $(BUILD)/ubase all CFLAGS="$(CFLAGS) --sysroot=$(SYSROOT)" && touch $@
-
-$(BUILD)/install/ubase: $(BUILD)/ubase
-	rm -rf $@ && mkdir -p $@
-	$(MAKE) -C $(BUILD)/ubase PREFIX=/usr DESTDIR=$@ install && touch $@
-
+#
+#$(BUILD)/ubase: $(SRC)/ubase $(SYSROOT)
+#	rm -rf $@ && mkdir -p $@
+#	rsync -avr $</ $@/
+#	$(MAKE) -C $(BUILD)/ubase all CFLAGS="$(CFLAGS) --sysroot=$(SYSROOT)" && touch $@
+#
+#$(BUILD)/install/ubase: $(BUILD)/ubase
+#	rm -rf $@ && mkdir -p $@
+#	$(MAKE) -C $(BUILD)/ubase PREFIX=/usr DESTDIR=$@ install && touch $@
+#
 ################################################################################
 # kbd                                                                          #
 ################################################################################
@@ -323,8 +323,9 @@ $(BUILD)/install/dosfstools: $(BUILD)/dosfstools
 ################################################################################
 
 $(BUILD)/rootfs: $(BUILD)/install/busybox $(BUILD)/install/sinit \
-		$(BUILD)/install/ubase $(SYSROOT) $(BUILD)/install/kbd \
+		$(SYSROOT) $(BUILD)/install/kbd \
 		$(BUILD)/install/dosfstools $(BUILD)/install/linux
+		#$(BUILD)/install/ubase
 	rm -rf $@ && mkdir -p $@
 	# create the basic filesystem layout
 	# please keep these sorted
@@ -411,7 +412,7 @@ $(BUILD)/rootfs: $(BUILD)/install/busybox $(BUILD)/install/sinit \
 	rsync -avr $(BUILD)/install/dosfstools/ $@/
 	rsync -avr $(BUILD)/install/kbd/ $@/
 	rsync -avr $(BUILD)/install/sinit/ $@/
-	rsync -avr $(BUILD)/install/ubase/ $@/
+	#rsync -avr $(BUILD)/install/ubase/ $@/
 	# link the init system
 	ln -sf usr/bin/sinit $@/init
 	ln -sf ../usr/bin/sinit $@/sbin/init
