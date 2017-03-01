@@ -192,7 +192,8 @@ $(BUILD)/install/linux: $(BUILD)/install/linux/usr/include $(BUILD)/install/linu
 $(BUILD)/glibc/Makefile: $(SRC)/glibc $(BUILD)/install/linux
 	mkdir -p $(@D) && rm -rf $(@D)/*
 	cd "$(@D)" ; $(SRC)/glibc/configure \
-		--prefix= \
+		--prefix=/usr \
+		--libexecdir=/usr/lib \
 		--with-headers="$(BUILD)/install/linux/usr/include" \
 		--with-kernel=4.0.0 \
 		--without-gd \
@@ -220,10 +221,6 @@ SYSROOT=$(BUILD)/sysroot
 $(SYSROOT): $(BUILD)/install/linux $(BUILD)/install/glibc
 	rm -rf $@/ && mkdir -p $@
 	rsync -a $(BUILD)/install/glibc/ $@/
-	mkdir -p $@/usr
-	cd $@/usr ; \
-		ln -s ../include include ; \
-		ln -s ../lib lib
 	#rsync -a $(BUILD)/install/linux/ $@/
 	cp -r $(BUILD)/install/linux/usr/include/* $@/usr/include/
 	cp -r $(BUILD)/install/linux/lib/* $@/lib/
@@ -402,12 +399,12 @@ $(BUILD)/rootfs: $(BUILD)/install/busybox $(BUILD)/install/sinit \
 	install -m 0644 $(SRC)/filesystem/etc/shells $@/etc/shells
 	# copy all the files in the sysroot over
 	#rsync -avr $(SYSROOT)/ $@/
-	cp $(SYSROOT)/lib/ld-linux* $@/lib
-	cp $(SYSROOT)/lib/libm.so.6 $@/lib
-	cp $(SYSROOT)/lib/libc.so.6 $@/lib
-	cp $(SYSROOT)/lib/libcrypt.so.1 $@/lib
-	cp $(SYSROOT)/lib/libresolv.so.2 $@/lib
-	cp $(SYSROOT)/lib/libnss_dns.so.2 $@/lib
+	cp $(SYSROOT)/usr/lib/ld-linux* $@/lib
+	cp $(SYSROOT)/usr/lib/libm.so.6 $@/lib
+	cp $(SYSROOT)/usr/lib/libc.so.6 $@/lib
+	cp $(SYSROOT)/usr/lib/libcrypt.so.1 $@/lib
+	cp $(SYSROOT)/usr/lib/libresolv.so.2 $@/lib
+	cp $(SYSROOT)/usr/lib/libnss_dns.so.2 $@/lib
 	cp -r $(BUILD)/install/linux/lib/* $@/lib/
 	rsync -avr $(BUILD)/install/dosfstools/ $@/
 	rsync -avr $(BUILD)/install/kbd/ $@/
