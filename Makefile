@@ -222,9 +222,7 @@ SYSROOT=$(BUILD)/sysroot
 $(SYSROOT): $(BUILD)/install/linux $(BUILD)/install/glibc
 	rm -rf $@/ && mkdir -p $@
 	rsync -a $(BUILD)/install/glibc/ $@/
-	#rsync -a $(BUILD)/install/linux/ $@/
-	cp -r $(BUILD)/install/linux/usr/include/* $@/usr/include/
-	cp -r $(BUILD)/install/linux/lib/* $@/lib/
+	rsync -a $(BUILD)/install/linux/ $@/
 	touch $@
 
 ################################################################################
