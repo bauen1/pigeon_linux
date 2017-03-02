@@ -174,14 +174,15 @@ $(BUILD)/install/linux/usr/include: $(BUILD)/linux/.config
 	touch $@
 
 # install the kernel modules and firmware
-$(BUILD)/install/linux/lib: $(BUILD)/linux/.config
+$(BUILD)/install/linux/usr/lib: $(BUILD)/linux/.config
 	mkdir -p $@ && rm -rf $@/* && mkdir -p $@/modules $@/firmware
 	$(LINUX_KERNEL_MAKE) modules
-	$(LINUX_KERNEL_MAKE) INSTALL_MOD_PATH=$(BUILD)/install/linux modules_install
-	$(LINUX_KERNEL_MAKE) INSTALL_FW_PATH=$(BUILD)/install/linux/lib/firmware firmware_install
+	$(LINUX_KERNEL_MAKE) INSTALL_MOD_PATH=$(BUILD)/install/linux/usr modules_install
+	$(LINUX_KERNEL_MAKE) INSTALL_FW_PATH=$(BUILD)/install/linux/usr/lib/firmware firmware_install
 	touch $@
 
-$(BUILD)/install/linux: $(BUILD)/install/linux/usr/include $(BUILD)/install/linux/lib
+$(BUILD)/install/linux: $(BUILD)/install/linux/usr/include \
+		$(BUILD)/install/linux/usr/lib
 	touch $@
 
 ################################################################################
