@@ -161,6 +161,8 @@ $(BUILD)/linux/.config: $(SRC)/kernel
 	$(LINUX_KERNEL_MAKE) defconfig
 	# Enable VESA framebuffer support
 	cd $(@D) && sed -i "s/.*CONFIG_FB_VESA.*/CONFIG_FB_VESA=y/" .config
+	# disable the boot logo
+	cd $(@D) && sed -i "s/.*CONFIG_LOGO_LINUX_CLUT224.*/\\# CONFIG_LOGO_LINUX_CLUT224 is not set/" .config
 	touch $@
 
 # generate the kernel in the compressed self-extracting bzImage format
