@@ -210,6 +210,7 @@ $(BUILD)/glibc: $(BUILD)/glibc/Makefile
 
 # install glibc
 $(BUILD)/install/glibc: $(BUILD)/glibc
+	rm -rf $(@D) && mkdir -p $(@D)
 	$(MAKE) -C $(BUILD)/glibc DESTDIR=$@ install && touch $@
 
 ################################################################################
