@@ -211,8 +211,6 @@ $(BUILD)/glibc: $(BUILD)/glibc/Makefile
 # install glibc
 $(BUILD)/install/glibc: $(BUILD)/glibc
 	rm -rf $@ && mkdir -p $@
-	ln -s usr/lib $@/lib64
-	ln -s usr/sbin $@/sbin
 	$(MAKE) -C $(BUILD)/glibc DESTDIR=$@ install && touch $@
 
 ################################################################################
@@ -224,8 +222,14 @@ SYSROOT=$(BUILD)/sysroot
 # create a sysroot (headers and libraries)
 $(SYSROOT): $(BUILD)/install/linux $(BUILD)/install/glibc
 	rm -rf $@/ && mkdir -p $@
-	rsync -a $(BUILD)/install/glibc/ $@/
-	rsync -a $(BUILD)/install/linux/ $@/
+	ln -s usr/bin $@/bin
+	ln -s usr/sbin $@/sbin
+	ln -s usr/lib $@/lib
+	ln -s usr/lib $@/lib64
+	mkdir -p $@/usr
+	ln -s lib $@/usr/lib64
+	rsync -avrL $(BUILD)/install/glibc/ $@/
+	rsync -avrL $(BUILD)/install/linux/ $@/
 	touch $@
 
 ################################################################################
