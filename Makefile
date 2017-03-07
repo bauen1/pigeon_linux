@@ -228,8 +228,8 @@ $(SYSROOT): $(BUILD)/install/linux $(BUILD)/install/glibc
 	ln -s usr/lib $@/lib64
 	mkdir -p $@/usr
 	ln -s lib $@/usr/lib64
-	rsync -avrL $(BUILD)/install/glibc/ $@/
-	rsync -avrL $(BUILD)/install/linux/ $@/
+	rsync -avrK $(BUILD)/install/glibc/ $@/
+	rsync -avrK $(BUILD)/install/linux/ $@/
 	touch $@
 
 ################################################################################
