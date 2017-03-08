@@ -202,7 +202,9 @@ $(BUILD)/glibc/Makefile: $(SRC)/glibc $(BUILD)/install/linux
 		--disable-werror \
 		--enable-add-ons \
 		--enable-stack-protector \
-		CFLAGS="$(CFLAGS)" && touch $@
+		CFLAGS="$(CFLAGS)" \
+		libc_cv_slibdir=/usr/lib # lib is symlinked to /usr/lib
+	touch $@
 
 # build glibc
 $(BUILD)/glibc: $(BUILD)/glibc/Makefile
@@ -405,13 +407,13 @@ $(BUILD)/rootfs: $(BUILD)/install/busybox $(BUILD)/install/sinit \
 	install -m 0644 $(SRC)/filesystem/etc/shells $@/etc/shells
 	# copy all the files in the sysroot over
 	#rsync -avr $(SYSROOT)/ $@/
-	cp $(SYSROOT)/usr/lib/ld-linux* $@/lib
-	cp $(SYSROOT)/usr/lib/libm.so.6 $@/lib
-	cp $(SYSROOT)/usr/lib/libc.so.6 $@/lib
-	cp $(SYSROOT)/usr/lib/libcrypt.so.1 $@/lib
-	cp $(SYSROOT)/usr/lib/libresolv.so.2 $@/lib
-	cp $(SYSROOT)/usr/lib/libnss_dns.so.2 $@/lib
-	cp -r $(BUILD)/install/linux/lib/* $@/lib/
+	cp $(SYSROOT)/usr/lib/ld-linux* $@/usr/lib
+	cp $(SYSROOT)/usr/lib/libm.so.6 $@/usr/lib
+	cp $(SYSROOT)/usr/lib/libc.so.6 $@/usr/lib
+	cp $(SYSROOT)/usr/lib/libcrypt.so.1 $@/usr/lib
+	cp $(SYSROOT)/usr/lib/libresolv.so.2 $@/usr/lib
+	cp $(SYSROOT)/usr/lib/libnss_dns.so.2 $@/usr/lib
+	rsync -avrK $(BUILD)/install/linux/ $@/
 	rsync -avr $(BUILD)/install/dosfstools/ $@/
 	rsync -avr $(BUILD)/install/kbd/ $@/
 	rsync -avr $(BUILD)/install/sinit/ $@/
