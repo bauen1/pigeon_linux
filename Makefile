@@ -43,12 +43,16 @@ all: $(BUILD)/pigeon_linux_live.iso
 .PHONY: clean
 clean:
 	rm -rf $(BUILD)/*
-	rm -rf $(SRC)/kernel
-	rm -rf $(SRC)/busybox
 
 .PHONY: clean_src
 clean_src:
-	rm -rf $(SRC)/*.tar*
+	rm -rf $(SRC)/linux-*.tar.xz      $(SRC)/linux
+	rm -rf $(SRC)/glibc-*.tar.xz      $(SRC)/glibc
+	rm -rf $(SRC)/busybox-*.tar.bz2   $(SRC)/busybox
+	rm -rf $(SRC)/syslinux-*.tar.xz   $(SRC)/syslinux
+	rm -rf $(SRC)/sinit-*tar.bz2      $(SRC)/sinit
+	rm -rf $(SRC)/kbd-*.tar.xz        $(SRC)/kbd
+	rm -rf $(SRC)/dosfstools-*.tar.xz $(SRC)/dosfstools
 
 .POHNY: qemu
 qemu: $(BUILD)/pigeon_linux_live.iso
@@ -67,7 +71,7 @@ LINUX_KERNEL_DOWNLOAD_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/$(LINUX_K
 $(SRC)/$(LINUX_KERNEL_DOWNLOAD_FILE):
 	rm -rf $@ && wget $(LINUX_KERNEL_DOWNLOAD_URL) -O $@
 
-$(SRC)/kernel: $(SRC)/$(LINUX_KERNEL_DOWNLOAD_FILE)
+$(SRC)/linux: $(SRC)/$(LINUX_KERNEL_DOWNLOAD_FILE)
 	rm -rf $@ && mkdir -p $@
 	tar -xvf $< -C $@ --strip-components=1 && touch $@
 
@@ -152,11 +156,11 @@ $(SRC)/dosfstools: $(SRC)/$(DOSFSTOOLS_DOWNLOAD_FILE)
 # Linux kernel                                                                 #
 ################################################################################
 
-LINUX_KERNEL_MAKE=$(MAKE) -C $(SRC)/kernel O=$(BUILD)/linux
+LINUX_KERNEL_MAKE=$(MAKE) -C $(SRC)/linux O=$(BUILD)/linux
 KERNEL=$(BUILD)/linux/arch/x86/boot/bzImage
 
 # Generate the default config for the kernel
-$(BUILD)/linux/.config: $(SRC)/kernel
+$(BUILD)/linux/.config: $(SRC)/linux
 	mkdir -p $(@D) && rm -rf $(@D)/*
 	$(LINUX_KERNEL_MAKE) defconfig
 	# Enable VESA framebuffer support
