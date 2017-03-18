@@ -187,9 +187,14 @@ $(BUILD)/install/linux/usr/lib/firmware: $(KERNEL) # FIXME: $(BUILD)/linux/.conf
 
 $(BUILD)/install/linux/usr/lib: $(BUILD)/install/linux/usr/lib/modules \
 		$(BUILD)/install/linux/usr/lib/firmware
+	sleep 3 && touch $@
+
 $(BUILD)/install/linux/usr: $(BUILD)/install/linux/usr/include \
 		$(BUILD)/install/linux/usr/lib
+	sleep 3 && touch $@
+
 $(BUILD)/install/linux: $(BUILD)/install/linux/usr
+	sleep 3 && touch $@
 
 ################################################################################
 # glibc                                                                        #
