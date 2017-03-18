@@ -123,12 +123,6 @@ $(SRC)/sinit: $(SRC)/$(SINIT_DOWNLOAD_FILE)
 	rm -rf $@ && mkdir -p $@
 	tar -xvf $< -C $@ --strip-components=1 && touch $@
 
-# ubase (unportable base)
-
-# FIXME: download link would be much better
-#$(SRC)/ubase:
-#	rm -rf $@ && cd $(SRC) && git clone http://git.suckless.org/ubase
-
 # kbd (linux keyboard tools)
 KBD_DOWNLOAD_FILE=kbd-2.0.4.tar.xz
 KBD_DOWNLOAD_URL=https://www.kernel.org/pub/linux/utils/kbd/$(KBD_DOWNLOAD_FILE)
@@ -280,19 +274,6 @@ $(BUILD)/install/sinit: $(BUILD)/sinit
 	$(MAKE) -C $(BUILD)/sinit PREFIX=/usr DESTDIR=$@ install && touch $@
 
 ################################################################################
-# ubase                                                                        #
-################################################################################
-#
-#$(BUILD)/ubase: $(SRC)/ubase $(SYSROOT)
-#	rm -rf $@ && mkdir -p $@
-#	rsync -avr $</ $@/
-#	$(MAKE) -C $(BUILD)/ubase all CFLAGS="$(CFLAGS) --sysroot=$(SYSROOT)" && touch $@
-#
-#$(BUILD)/install/ubase: $(BUILD)/ubase
-#	rm -rf $@ && mkdir -p $@
-#	$(MAKE) -C $(BUILD)/ubase PREFIX=/usr DESTDIR=$@ install && touch $@
-#
-################################################################################
 # kbd                                                                          #
 ################################################################################
 
@@ -336,7 +317,6 @@ $(BUILD)/install/dosfstools: $(BUILD)/dosfstools
 $(BUILD)/rootfs: $(BUILD)/install/busybox $(BUILD)/install/sinit \
 		$(SYSROOT) $(BUILD)/install/kbd \
 		$(BUILD)/install/dosfstools $(BUILD)/install/linux
-		#$(BUILD)/install/ubase
 	rm -rf $@ && mkdir -p $@
 	# create the basic filesystem layout
 	# please keep these sorted
