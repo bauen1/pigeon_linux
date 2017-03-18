@@ -163,27 +163,31 @@ $(BUILD)/linux/.config: $(SRC)/linux
 	cd $(@D) && sed -i "s/.*CONFIG_LOGO_LINUX_CLUT224.*/\\# CONFIG_LOGO_LINUX_CLUT224 is not set/" .config
 	touch $@
 
-# generate the kernel in the compressed self-extracting bzImage format
+# compile the kernel and modules
 $(KERNEL): $(BUILD)/linux/.config
 	$(LINUX_KERNEL_MAKE) bzImage
+	$(LINUX_KERNEL_MAKE) modules
 
 # install the kernel headers
-$(BUILD)/install/linux/usr/include: $(BUILD)/linux/.config
-	mkdir -p $(@D) && rm -rf $(@D)/*
-	$(LINUX_KERNEL_MAKE)  INSTALL_HDR_PATH=$(@D) headers_install
-	touch $@
+$(BUILD)/install/linux/usr/include: $(KERNEL) # FIXME: $(BUILD)/linux/.config should be enough
+	rm -rf $@ && mkdir -p $@
+	$(LINUX_KERNEL_MAKE) INSTALL_HDR_PATH=$(@D) headers_install
 
-# install the kernel modules and firmware
-$(BUILD)/install/linux/usr/lib: $(BUILD)/linux/.config
-	mkdir -p $@ && rm -rf $@/* && mkdir -p $@/modules $@/firmware
-	$(LINUX_KERNEL_MAKE) modules
-	$(LINUX_KERNEL_MAKE) INSTALL_MOD_PATH=$(BUILD)/install/linux/usr modules_install
-	$(LINUX_KERNEL_MAKE) INSTALL_FW_PATH=$(BUILD)/install/linux/usr/lib/firmware firmware_install
-	touch $@
+# install all the kernel modules
+$(BUILD)/install/linux/usr/lib/modules: $(KERNEL)
+	rm -rf $@ && mkdir -p $@
+	$(LINUX_KERNEL_MAKE) INSTALL_MOD_PATH=$(BUILD)/install/linux/usr \
+		modules_install
 
-$(BUILD)/install/linux: $(BUILD)/install/linux/usr/include \
-		$(BUILD)/install/linux/usr/lib
-	touch $@
+# install all the kernel firmware
+$(BUILD)/install/linux/usr/lib/firmware: $(KERNEL) # FIXME: $(BUILD)/linux/.config should be enough
+	rm -rf $@ && mkdir -p $@
+	$(LINUX_KERNEL_MAKE) INSTALL_FW_PATH=$(BUILD)/install/linux/usr/lib/firmware \
+		firmware_install
+
+$(BUILD)/install/linux/usr/lib: $@/modules $@/firmware
+$(BUILD)/install/linux/usr: $@/include $@/lib
+$(BUILD)/install/linux: $@/usr
 
 ################################################################################
 # glibc                                                                        #
