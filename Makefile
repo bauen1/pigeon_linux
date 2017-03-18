@@ -56,7 +56,7 @@ clean_src:
 
 .POHNY: qemu
 qemu: $(BUILD)/pigeon_linux_live.iso
-	# if you get a "write error no space left error" throw more ram at it
+	# if you get a "write error no space left error", throw more ram at it
 	qemu-system-x86_64 -m 64M -cdrom $< -boot d -vga std
 
 ################################################################################
@@ -248,10 +248,7 @@ BUSYBOX_MAKE=$(MAKE) -C $(SRC)/busybox O=$(BUILD)/busybox CFLAGS="$(CFLAGS) -fom
 $(BUILD)/busybox/.config: $(SRC)/busybox $(SYSROOT)
 	mkdir -p $(@D) && rm -rf $(@D)/*
 	$(BUSYBOX_MAKE) defconfig
-	# enable static linking for the time being
-	# cd $(@D) && sed -i 's/.*CONFIG_STATIC.*/CONFIG_STATIC=y/g' .config
-	# dynamic linking rules!
-	##
+	# tell busybox to use the sysroot
 	cd $(@D) && sed -i 's/.*CONFIG_SYSROOT.*/CONFIG_SYSROOT="$(SYSROOT_ESCAPED)"/g' .config
 
 $(BUILD)/busybox: $(BUILD)/busybox/.config $(SYSROOT)
@@ -318,10 +315,7 @@ $(BUILD)/rootfs: $(BUILD)/install/busybox $(BUILD)/install/sinit \
 		$(SYSROOT) $(BUILD)/install/kbd \
 		$(BUILD)/install/dosfstools $(BUILD)/install/linux
 	rm -rf $@ && mkdir -p $@
-	# create the basic filesystem layout
-	# please keep these sorted
-	#
-	# Create the directory layout
+	# Create the basic filesystem (please keep this sorted)
 	ln -s usr/bin $@/bin
 	install -d -m 0755 $@/boot
 	install -d -m 0755 $@/dev
@@ -378,8 +372,6 @@ $(BUILD)/rootfs: $(BUILD)/install/busybox $(BUILD)/install/sinit \
 	install -d -m 0755 $@/var/spool/cron
 	install -d -m 1777 $@/var/spool/mail
 	install -d -m 1777 $@/var/tmp
-	#
-	#
 	# install the files
 	install -m 0644 $(SRC)/filesystem/etc/fstab $@/etc/fstab
 	install -m 0644 $(SRC)/filesystem/etc/group $@/etc/group
@@ -391,8 +383,7 @@ $(BUILD)/rootfs: $(BUILD)/install/busybox $(BUILD)/install/sinit \
 	install -m 0644 $(SRC)/filesystem/etc/securetty $@/etc/securetty
 	install -m 0600 $(SRC)/filesystem/etc/shadow $@/etc/shadow
 	install -m 0644 $(SRC)/filesystem/etc/shells $@/etc/shells
-	# copy all the files in the sysroot over
-	#rsync -avr $(SYSROOT)/ $@/
+	# copy all the needed files in the sysroot over
 	cp $(SYSROOT)/usr/lib/ld-linux* $@/usr/lib
 	cp $(SYSROOT)/usr/lib/libm.so.6 $@/usr/lib
 	cp $(SYSROOT)/usr/lib/libc.so.6 $@/usr/lib
