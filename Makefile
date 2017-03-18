@@ -197,8 +197,8 @@ $(BUILD)/install/linux: $(BUILD)/install/linux/usr
 
 # configure glibc for compile
 $(BUILD)/glibc/Makefile: $(SRC)/glibc $(BUILD)/install/linux
-	mkdir -p $(@D) && rm -rf $(@D)
-	cd "$(@D)" ; $(SRC)/glibc/configure \
+	rm -rf $(@D) && mkdir -p $(@D)
+	cd "$(@D)" && $(SRC)/glibc/configure \
 		--prefix=/usr \
 		--libexecdir=/usr/lib \
 		--with-headers="$(BUILD)/install/linux/usr/include" \
@@ -282,8 +282,11 @@ $(BUILD)/install/sinit: $(BUILD)/sinit
 
 $(BUILD)/kbd/Makefile: $(SRC)/kbd $(SYSROOT)
 	rm -rf $(@D) && mkdir -p $(@D)
-	cd $(@D) && $(SRC)/kbd/configure --prefix=/usr --with-sysroot=$(SYSROOT) \
-		--datadir=/usr/share/kbd --mandir=/usr/share/man
+	cd $(@D) && $(SRC)/kbd/configure
+		--prefix=/usr \
+		--with-sysroot=$(SYSROOT) \
+		--datadir=/usr/share/kbd \
+		--mandir=/usr/share/man
 
 $(BUILD)/kbd: $(BUILD)/kbd/Makefile $(SYSROOT)
 	$(MAKE) -C $(BUILD)/kbd all && touch $@
@@ -397,10 +400,9 @@ $(BUILD)/rootfs: $(BUILD)/install/busybox $(BUILD)/install/sinit \
 	cp $(SYSROOT)/usr/lib/libresolv.so.2 $@/usr/lib
 	cp $(SYSROOT)/usr/lib/libnss_dns.so.2 $@/usr/lib
 	rsync -avrK $(BUILD)/install/linux/ $@/
-	rsync -avr $(BUILD)/install/dosfstools/ $@/
-	rsync -avr $(BUILD)/install/kbd/ $@/
-	rsync -avr $(BUILD)/install/sinit/ $@/
-	#rsync -avr $(BUILD)/install/ubase/ $@/
+	rsync -avrK $(BUILD)/install/dosfstools/ $@/
+	rsync -avrK $(BUILD)/install/kbd/ $@/
+	rsync -avrK $(BUILD)/install/sinit/ $@/
 	# link the init system
 	ln -sf usr/bin/sinit $@/init
 	ln -sf ../usr/bin/sinit $@/sbin/init
@@ -439,7 +441,7 @@ $(BUILD)/iso: $(BUILD)/initrd.cpio.gz $(KERNEL) $(SRC)/syslinux \
 	touch $@
 
 $(BUILD)/pigeon_linux_live.iso: $(BUILD)/iso
-	cd $< ; genisoimage \
+	cd $< && genisoimage \
 		-J \
 		-r \
 		-o $@ \
@@ -449,7 +451,7 @@ $(BUILD)/pigeon_linux_live.iso: $(BUILD)/iso
 		-no-emul-boot \
 		-boot-load-size 4 \
 		-boot-info-table \
-		$(BUILD)/iso
+		$<
 
 ################################################################################
 #                                                                              #
