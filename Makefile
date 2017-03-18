@@ -13,8 +13,8 @@ SRC ?=$(PWD)/src
 BUILD ?=$(PWD)/build
 DOCS ?=$(PWD)/docs
 
-# Optimize for size, strip, protect against bad implementations
-CFLAGS ?=-Os -s -U_FORTIFY_SOURCE
+# Optimize, strip, protect against bad implementations
+CFLAGS ?=-O3 -s -U_FORTIFY_SOURCE
 
 NUM_JOBS=8
 
