@@ -185,9 +185,11 @@ $(BUILD)/install/linux/usr/lib/firmware: $(KERNEL) # FIXME: $(BUILD)/linux/.conf
 	$(LINUX_KERNEL_MAKE) INSTALL_FW_PATH=$(BUILD)/install/linux/usr/lib/firmware \
 		firmware_install
 
-$(BUILD)/install/linux/usr/lib: $@/modules $@/firmware
-$(BUILD)/install/linux/usr: $@/include $@/lib
-$(BUILD)/install/linux: $@/usr
+$(BUILD)/install/linux/usr/lib: $(BUILD)/install/linux/usr/lib/modules \
+		$(BUILD)/install/linux/usr/lib/firmware
+$(BUILD)/install/linux/usr: $(BUILD)/install/linux/usr/include \
+		$(BUILD)/install/linux/usr/lib
+$(BUILD)/install/linux: $(BUILD)/install/linux/usr
 
 ################################################################################
 # glibc                                                                        #
@@ -195,7 +197,7 @@ $(BUILD)/install/linux: $@/usr
 
 # configure glibc for compile
 $(BUILD)/glibc/Makefile: $(SRC)/glibc $(BUILD)/install/linux
-	mkdir -p $(@D) && rm -rf $(@D)/*
+	mkdir -p $(@D) && rm -rf $(@D)
 	cd "$(@D)" ; $(SRC)/glibc/configure \
 		--prefix=/usr \
 		--libexecdir=/usr/lib \
