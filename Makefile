@@ -65,7 +65,7 @@ qemu: $(BUILD)/pigeon_linux_live.iso
 
 # linux kernel
 
-LINUX_KERNEL_DOWNLOAD_FILE=linux-4.9.13.tar.xz
+LINUX_KERNEL_DOWNLOAD_FILE=linux-4.9.16.tar.xz
 LINUX_KERNEL_DOWNLOAD_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/$(LINUX_KERNEL_DOWNLOAD_FILE)
 
 $(SRC)/$(LINUX_KERNEL_DOWNLOAD_FILE):
