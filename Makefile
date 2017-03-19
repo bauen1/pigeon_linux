@@ -178,12 +178,14 @@ $(BUILD)/install/linux/usr/lib/modules: $(KERNEL)
 	rm -rf $@ && mkdir -p $@
 	$(LINUX_KERNEL_MAKE) INSTALL_MOD_PATH=$(BUILD)/install/linux/usr \
 		modules_install
+	sleep 3 && touch $@
 
 # install all the kernel firmware
 $(BUILD)/install/linux/usr/lib/firmware: $(KERNEL) # FIXME: $(BUILD)/linux/.config should be enough
 	rm -rf $@ && mkdir -p $@
 	$(LINUX_KERNEL_MAKE) INSTALL_FW_PATH=$(BUILD)/install/linux/usr/lib/firmware \
 		firmware_install
+	sleep 3 && touch $@
 
 $(BUILD)/install/linux/usr/lib: $(BUILD)/install/linux/usr/lib/modules \
 		$(BUILD)/install/linux/usr/lib/firmware
@@ -241,8 +243,8 @@ $(SYSROOT): $(BUILD)/install/linux $(BUILD)/install/glibc
 	ln -s usr/lib $@/lib64
 	mkdir -p $@/usr
 	ln -s lib $@/usr/lib64
-	rsync -avrK $(BUILD)/install/glibc/ $@/
-	rsync -avrK $(BUILD)/install/linux/ $@/
+	rsync -rlpgoDvrK $(BUILD)/install/glibc/ $@/
+	rsync -rlpgoDvrK $(BUILD)/install/linux/ $@/
 	touch $@
 
 ################################################################################
@@ -274,7 +276,7 @@ $(BUILD)/install/busybox: $(BUILD)/busybox
 
 $(BUILD)/sinit: $(SRC)/sinit $(SYSROOT)
 	rm -rf $@ && mkdir -p $@
-	rsync -avr $</ $@/
+	rsync -rlpgoDvr $</ $@/
 	$(MAKE) -C $(BUILD)/sinit all CFLAGS="$(CFLAGS) --sysroot=$(SYSROOT)" && touch $@
 
 $(BUILD)/install/sinit: $(BUILD)/sinit
@@ -404,14 +406,14 @@ $(BUILD)/rootfs: $(BUILD)/install/busybox $(BUILD)/install/sinit \
 	cp $(SYSROOT)/usr/lib/libcrypt.so.1 $@/usr/lib
 	cp $(SYSROOT)/usr/lib/libresolv.so.2 $@/usr/lib
 	cp $(SYSROOT)/usr/lib/libnss_dns.so.2 $@/usr/lib
-	rsync -avrK $(BUILD)/install/linux/ $@/
-	rsync -avrK $(BUILD)/install/dosfstools/ $@/
-	rsync -avrK $(BUILD)/install/kbd/ $@/
-	rsync -avrK $(BUILD)/install/sinit/ $@/
+	rsync -rlpgoDvrK $(BUILD)/install/linux/ $@/
+	rsync -rlpgoDvrK $(BUILD)/install/dosfstools/ $@/
+	rsync -rlpgoDvrK $(BUILD)/install/kbd/ $@/
+	rsync -rlpgoDvrK $(BUILD)/install/sinit/ $@/
 	# link the init system
 	ln -sf usr/bin/sinit $@/init
 	ln -sf ../usr/bin/sinit $@/sbin/init
-	rsync -avr --ignore-existing $(BUILD)/install/busybox/ $@/
+	rsync -rlpgoDvr --ignore-existing $(BUILD)/install/busybox/ $@/
 	rm -f $@/linuxrc
 	# update the date on the directory itself
 	touch $@
@@ -422,8 +424,8 @@ $(BUILD)/rootfs: $(BUILD)/install/busybox $(BUILD)/install/sinit \
 
 $(BUILD)/initramfs: $(SRC)/initfs $(BUILD)/rootfs
 	rm -rf $@ && mkdir -p $@
-	rsync -avr $(BUILD)/rootfs/ $@/
-	rsync -avrK $(SRC)/initfs/ $@/
+	rsync -rlpgoDvr $(BUILD)/rootfs/ $@/
+	rsync -rlpgoDvrK $(SRC)/initfs/ $@/
 	touch $@
 
 $(BUILD)/initrd.cpio.gz: $(BUILD)/initramfs
