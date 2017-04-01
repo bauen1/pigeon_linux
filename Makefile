@@ -65,7 +65,8 @@ qemu: $(BUILD)/pigeon_linux_live.iso
 
 # linux kernel
 
-LINUX_KERNEL_DOWNLOAD_FILE=linux-4.9.16.tar.xz
+LINUX_KERNEL_VERSION=4.9.20
+LINUX_KERNEL_DOWNLOAD_FILE=linux-$(LINUX_KERNEL_VERSION).tar.xz
 LINUX_KERNEL_DOWNLOAD_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/$(LINUX_KERNEL_DOWNLOAD_FILE)
 
 $(SRC)/$(LINUX_KERNEL_DOWNLOAD_FILE):
@@ -77,7 +78,8 @@ $(SRC)/linux: $(SRC)/$(LINUX_KERNEL_DOWNLOAD_FILE)
 
 # glibc
 
-GLIBC_DOWNLOAD_FILE=glibc-2.25.tar.xz
+GLIBC_VERSION=2.25
+GLIBC_DOWNLOAD_FILE=glibc-$(GLIBC_VERSION).tar.xz
 GLIBC_DOWNLOAD_URL=https://ftp.gnu.org/gnu/libc/$(GLIBC_DOWNLOAD_FILE)
 
 $(SRC)/$(GLIBC_DOWNLOAD_FILE):
@@ -89,7 +91,8 @@ $(SRC)/glibc: $(SRC)/$(GLIBC_DOWNLOAD_FILE)
 
 # busybox
 
-BUSYBOX_DOWNLOAD_FILE=busybox-1.26.2.tar.bz2
+BUSYBOX_VERSION=1.26.2
+BUSYBOX_DOWNLOAD_FILE=busybox-$(BUSYBOX_VERSION).tar.bz2
 BUSYBOX_DOWNLOAD_URL=http://busybox.net/downloads/$(BUSYBOX_DOWNLOAD_FILE)
 
 $(SRC)/$(BUSYBOX_DOWNLOAD_FILE):
@@ -101,7 +104,8 @@ $(SRC)/busybox: $(SRC)/$(BUSYBOX_DOWNLOAD_FILE)
 
 # syslinux
 
-SYSLINUX_DOWNLOAD_FILE=syslinux-6.03.tar.xz
+SYSLINUX_VERSION=6.03
+SYSLINUX_DOWNLOAD_FILE=syslinux-$(SYSLINUX_VERSION).tar.xz
 SYSLINUX_DOWNLOAD_URL=http://kernel.org/pub/linux/utils/boot/syslinux/$(SYSLINUX_DOWNLOAD_FILE)
 
 $(SRC)/$(SYSLINUX_DOWNLOAD_FILE):
@@ -113,7 +117,8 @@ $(SRC)/syslinux: $(SRC)/$(SYSLINUX_DOWNLOAD_FILE)
 
 # sinit (suckless init MIT license)
 
-SINIT_DOWNLOAD_FILE=sinit-1.0.tar.bz2
+SINIT_VERSION=1.0
+SINIT_DOWNLOAD_FILE=sinit-$(SINIT_VERSION).tar.bz2
 SINIT_DOWNLOAD_URL=http://git.suckless.org/sinit/snapshot/$(SINIT_DOWNLOAD_FILE)
 
 $(SRC)/$(SINIT_DOWNLOAD_FILE):
@@ -124,7 +129,9 @@ $(SRC)/sinit: $(SRC)/$(SINIT_DOWNLOAD_FILE)
 	tar -xvf $< -C $@ --strip-components=1 && touch $@
 
 # kbd (linux keyboard tools)
-KBD_DOWNLOAD_FILE=kbd-2.0.4.tar.xz
+
+KBD_VERSION=2.0.4
+KBD_DOWNLOAD_FILE=kbd-$(KBD_VERSION).tar.xz
 KBD_DOWNLOAD_URL=https://www.kernel.org/pub/linux/utils/kbd/$(KBD_DOWNLOAD_FILE)
 
 $(SRC)/$(KBD_DOWNLOAD_FILE):
@@ -136,7 +143,8 @@ $(SRC)/kbd: $(SRC)/$(KBD_DOWNLOAD_FILE)
 
 # dosfstools
 
-DOSFSTOOLS_DOWNLOAD_FILE=dosfstools-4.1.tar.xz
+DOSFSTOOLS_VERSION=4.1
+DOSFSTOOLS_DOWNLOAD_FILE=dosfstools-$(DOSFSTOOLS_VERSION).tar.xz
 DOSFSTOOLS_DOWNLOAD_URL=https://github.com/dosfstools/dosfstools/releases/download/v4.1/$(DOSFSTOOLS_DOWNLOAD_FILE)
 
 $(SRC)/$(DOSFSTOOLS_DOWNLOAD_FILE):
