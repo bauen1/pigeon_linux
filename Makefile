@@ -28,14 +28,14 @@ MAKE=make -j $(NUM_JOBS)
 .PHONY: info
 info:
 	@echo "targets:         "
-	@echo "	                "
+	@echo ""
 	@echo "	all             build the livecd iso file"
-	@echo "	                "
+	@echo ""
 	@echo "	clean           clean build/*"
 	@echo "	clean_src       clean all downloads"
-	@echo "	                "
+	@echo ""
 	@echo "	qemu            run qemu with the livecd"
-	@echo "	                "
+	@echo ""
 
 .PHONY: all
 all: $(BUILD)/pigeon_linux_live.iso
@@ -62,6 +62,8 @@ qemu: $(BUILD)/pigeon_linux_live.iso
 ################################################################################
 # Source downloading                                                           #
 ################################################################################
+
+# TODO: signature and hash checking
 
 # linux kernel
 
