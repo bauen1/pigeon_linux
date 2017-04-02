@@ -422,7 +422,7 @@ $(BUILD)/initramfs: $(BUILD)/install/busybox $(SYSROOT) $(SRC)/mkinitramfs/init
 	install -d -m 0755 $@/usr/share/man
 	install -d -m 0755 $@/usr/share/man/man{1,2,3,4,5,6,7,8}
 	# copy all needed libraries over
-	cp $(SYSROOT)/usr/lib/$(INITRAMFS_LIBS) $@/usr/lib
+	cp $(addprefix $(SYSROOT)/usr/lib/,$(INITRAMFS_LIBS)) $@/usr/lib
 	cp $(SRC)/mkinitramfs/init $@/init
 	chmod +x $@/init
 	cp $(BUILD)/install/busybox/bin/busybox $@/usr/bin
