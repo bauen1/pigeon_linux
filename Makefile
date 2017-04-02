@@ -165,7 +165,7 @@ KERNEL=$(BUILD)/linux/arch/x86/boot/bzImage
 
 # Generate the default config for the kernel
 $(BUILD)/linux/.config: $(SRC)/linux
-	mkdir -p $(@D) && rm -rf $(@D)/*
+	rm -rf $(@D) && mkdir -p $(@D) # FORCE a rebuild of everything depending on this in any way
 	$(LINUX_KERNEL_MAKE) defconfig
 	# Enable VESA framebuffer support
 	cd $(@D) && sed -i "s/.*CONFIG_FB_VESA.*/CONFIG_FB_VESA=y/" .config
@@ -303,7 +303,8 @@ $(BUILD)/kbd/Makefile: $(SRC)/kbd $(SYSROOT)
 		--prefix=/usr \
 		--with-sysroot=$(SYSROOT) \
 		--datadir=/usr/share/kbd \
-		--mandir=/usr/share/man
+		--mandir=/usr/share/man && \
+	touch $@
 
 $(BUILD)/kbd: $(BUILD)/kbd/Makefile $(SYSROOT)
 	$(MAKE) -C $(BUILD)/kbd all && touch $@
@@ -325,7 +326,8 @@ $(BUILD)/dosfstools/Makefile: $(SRC)/dosfstools $(SYSROOT)
 		--libexecdir=/usr/lib \
 		--mandir=/usr/share/man \
 		--docdir=/usr/share/doc/dosfstools \
-		CFLAGS="--sysroot=$(SYSROOT) $(CFLAGS)"
+		CFLAGS="--sysroot=$(SYSROOT) $(CFLAGS)" && \
+	touch $@
 
 $(BUILD)/dosfstools: $(BUILD)/dosfstools/Makefile
 	$(MAKE) -C $(BUILD)/dosfstools all && touch $@
@@ -432,10 +434,9 @@ $(BUILD)/rootfs: $(BUILD)/install/busybox $(BUILD)/install/sinit \
 # initrd.cpio.gz                                                               #
 ################################################################################
 
-$(BUILD)/initramfs: $(SRC)/initfs $(BUILD)/rootfs
+$(BUILD)/initramfs: $(BUILD)/rootfs
 	rm -rf $@ && mkdir -p $@
 	rsync -rlpgoDvr $(BUILD)/rootfs/ $@/
-	rsync -rlpgoDvrK $(SRC)/initfs/ $@/
 	touch $@
 
 $(BUILD)/initrd.cpio.gz: $(BUILD)/initramfs
