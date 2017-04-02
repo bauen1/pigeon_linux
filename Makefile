@@ -368,10 +368,13 @@ $(BUILD)/rootfs: $(BUILD)/install/busybox $(BUILD)/install/sinit \
 	install -m 0644 $(SRC)/filesystem/etc/fstab $@/etc/fstab
 	install -m 0644 $(SRC)/filesystem/etc/group $@/etc/group
 	install -m 0600 $(SRC)/filesystem/etc/gshadow $@/etc/gshadow
+	install -m 0644 $(SRC)/filesystem/etc/hostname $@/etc/hostname
+	install -m 0644 $(SRC)/filesystem/etc/hosts $@/etc/hosts
 	install -m 0644 $(SRC)/filesystem/etc/issue $@/etc/issue
 	install -m 0644 $(SRC)/filesystem/etc/motd $@/etc/motd
 	install -m 0644 $(SRC)/filesystem/etc/os-version $@/etc/os-version
 	install -m 0644 $(SRC)/filesystem/etc/passwd $@/etc/passwd
+	install -m 0644 $(SRC)/filesystem/etc/profile $@/etc/profile
 	install -m 0644 $(SRC)/filesystem/etc/securetty $@/etc/securetty
 	install -m 0600 $(SRC)/filesystem/etc/shadow $@/etc/shadow
 	install -m 0644 $(SRC)/filesystem/etc/shells $@/etc/shells
@@ -397,9 +400,31 @@ $(BUILD)/rootfs: $(BUILD)/install/busybox $(BUILD)/install/sinit \
 # initrd.cpio.gz                                                               #
 ################################################################################
 
-$(BUILD)/initramfs: $(BUILD)/rootfs
+INITRAMFS_LIBS=ld-linux* libm.so.6 libc.so.6
+
+$(BUILD)/initramfs: $(SYSROOT)/usr/lib/$(INITRAMFS_LIBS) $(SRC)/mkinitramfs/init
 	rm -rf $@ && mkdir -p $@
-	rsync -rlpgoDvr $(BUILD)/rootfs/ $@/
+	ln -s usr/bin $@/bin
+	install -d -m 0755 $@/etc
+	ln -s usr/lib $@/lib
+	ln -s usr/lib $@/lib64
+	install -d -m 0755 $@/mnt
+	install -d -m 0755 $@/proc
+	ln -s usr/sbin $@/sbin
+	install -d -m 0755 $@/sys
+	install -d -m 0755 $@/tmp
+	install -d -m 0755 $@/usr
+	install -d -m 0755 $@/usr/bin
+	install -d -m 0755 $@/usr/lib
+	ln -s lib $@/usr/lib64
+	install -d -m 0755 $@/usr/sbin
+	install -d -m 0755 $@/usr/share
+	install -d -m 0755 $@/usr/share/man
+	install -d -m 0755 $@/usr/share/man/man{1,2,3,4,5,6,7,8}
+	# copy all needed libraries over
+	cp $(SYSROOT)/usr/lib/$(INITRAMFS_LIBS) $@/usr/lib
+	cp $(SRC)/mkinitramfs/init $@/init
+	chmod +x $@/init
 	touch $@
 
 $(BUILD)/initrd.cpio.gz: $(BUILD)/initramfs

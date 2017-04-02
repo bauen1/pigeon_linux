@@ -8,7 +8,7 @@ build/*
 
 # Ignore source files that can be rebuild/extracted
 src/*
-!src/initfs
 !src/rootfs
 !src/filesystem
 !src/syslinux.cfg
+!src/mkinitramfs
