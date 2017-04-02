@@ -402,7 +402,7 @@ $(BUILD)/rootfs: $(BUILD)/install/busybox $(BUILD)/install/sinit \
 
 INITRAMFS_LIBS=ld-linux* libm.so.6 libc.so.6
 
-$(BUILD)/initramfs: $(BUILD)/install/busybox $(SYSROOT)/usr/lib/$(INITRAMFS_LIBS) $(SRC)/mkinitramfs/init
+$(BUILD)/initramfs: $(BUILD)/install/busybox $(SYSROOT) $(SRC)/mkinitramfs/init
 	rm -rf $@ && mkdir -p $@
 	ln -s usr/bin $@/bin
 	install -d -m 0755 $@/etc
