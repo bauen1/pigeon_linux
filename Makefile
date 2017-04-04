@@ -378,7 +378,6 @@ $(BUILD)/rootfs: $(BUILD)/install/busybox $(BUILD)/install/sinit \
 	install -m 0644 $(SRC)/filesystem/etc/securetty $@/etc/securetty
 	install -m 0600 $(SRC)/filesystem/etc/shadow $@/etc/shadow
 	install -m 0644 $(SRC)/filesystem/etc/shells $@/etc/shells
-	# copy all the needed files in the sysroot over
 	cp $(SYSROOT)/usr/lib/ld-linux* $@/usr/lib
 	cp $(SYSROOT)/usr/lib/libm.so.6 $@/usr/lib
 	cp $(SYSROOT)/usr/lib/libc.so.6 $@/usr/lib
