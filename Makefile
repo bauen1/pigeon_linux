@@ -13,8 +13,8 @@ SRC ?=$(PWD)/src
 BUILD ?=$(PWD)/build
 DOCS ?=$(PWD)/docs
 
-# Optimize for size, strip, protect against bad implementations
-CFLAGS ?=-Os -s -U_FORTIFY_SOURCE
+# Optimize, strip, protect against bad implementations
+CFLAGS ?=-O3 -s -U_FORTIFY_SOURCE
 
 NUM_JOBS=8
 
@@ -28,14 +28,14 @@ MAKE=make -j $(NUM_JOBS)
 .PHONY: info
 info:
 	@echo "targets:         "
-	@echo "	                "
+	@echo ""
 	@echo "	all             build the livecd iso file"
-	@echo "	                "
+	@echo ""
 	@echo "	clean           clean build/*"
 	@echo "	clean_src       clean all downloads"
-	@echo "	                "
+	@echo ""
 	@echo "	qemu            run qemu with the livecd"
-	@echo "	                "
+	@echo ""
 
 .PHONY: all
 all: $(BUILD)/pigeon_linux_live.iso
@@ -122,12 +122,6 @@ $(SRC)/sinit: $(SRC)/$(SINIT_DOWNLOAD_FILE)
 	rm -rf $@ && mkdir -p $@
 	tar -xvf $< -C $@ --strip-components=1 && touch $@
 
-# ubase (unportable base)
-
-# FIXME: download link would be much better
-#$(SRC)/ubase:
-#	rm -rf $@ && cd $(SRC) && git clone http://git.suckless.org/ubase
-
 # kbd (linux keyboard tools)
 KBD_DOWNLOAD_FILE=kbd-2.0.4.tar.xz
 KBD_DOWNLOAD_URL=https://www.kernel.org/pub/linux/utils/kbd/$(KBD_DOWNLOAD_FILE)
@@ -148,7 +142,7 @@ KERNEL=$(BUILD)/linux/arch/x86/boot/bzImage
 
 # Generate the default config for the kernel
 $(BUILD)/linux/.config: $(SRC)/linux
-	mkdir -p $(@D) && rm -rf $(@D)/*
+	rm -rf $(@D) && mkdir -p $(@D)
 	$(LINUX_KERNEL_MAKE) defconfig
 	# Enable VESA framebuffer support
 	cd $(@D) && sed -i "s/.*CONFIG_FB_VESA.*/CONFIG_FB_VESA=y/" .config
@@ -184,8 +178,8 @@ $(BUILD)/install/linux: $(BUILD)/install/linux/usr/include \
 
 # configure glibc for compile
 $(BUILD)/glibc/Makefile: $(SRC)/glibc $(BUILD)/install/linux
-	mkdir -p $(@D) && rm -rf $(@D)/*
-	cd "$(@D)" ; $(SRC)/glibc/configure \
+	rm -rf $(@D) && mkdir -p $(@D)
+	cd "$(@D)" && $(SRC)/glibc/configure \
 		--prefix=/usr \
 		--libexecdir=/usr/lib \
 		--with-headers="$(BUILD)/install/linux/usr/include" \
@@ -266,19 +260,6 @@ $(BUILD)/install/sinit: $(BUILD)/sinit
 	rm -rf $@ && mkdir -p $@
 	$(MAKE) -C $(BUILD)/sinit PREFIX=/usr DESTDIR=$@ install && touch $@
 
-################################################################################
-# ubase                                                                        #
-################################################################################
-#
-#$(BUILD)/ubase: $(SRC)/ubase $(SYSROOT)
-#	rm -rf $@ && mkdir -p $@
-#	rsync -avr $</ $@/
-#	$(MAKE) -C $(BUILD)/ubase all CFLAGS="$(CFLAGS) --sysroot=$(SYSROOT)" && touch $@
-#
-#$(BUILD)/install/ubase: $(BUILD)/ubase
-#	rm -rf $@ && mkdir -p $@
-#	$(MAKE) -C $(BUILD)/ubase PREFIX=/usr DESTDIR=$@ install && touch $@
-#
 ################################################################################
 # kbd                                                                          #
 ################################################################################
