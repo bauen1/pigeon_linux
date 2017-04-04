@@ -52,7 +52,6 @@ clean_src:
 	rm -rf $(SRC)/syslinux-*.tar.xz   $(SRC)/syslinux
 	rm -rf $(SRC)/sinit-*tar.bz2      $(SRC)/sinit
 	rm -rf $(SRC)/kbd-*.tar.xz        $(SRC)/kbd
-	rm -rf $(SRC)/dosfstools-*.tar.xz $(SRC)/dosfstools
 
 .POHNY: qemu
 qemu: $(BUILD)/pigeon_linux_live.iso
@@ -137,18 +136,6 @@ $(SRC)/$(KBD_DOWNLOAD_FILE):
 	rm -rf $@ && wget $(KBD_DOWNLOAD_URL) -O $@
 
 $(SRC)/kbd: $(SRC)/$(KBD_DOWNLOAD_FILE)
-	rm -rf $@ && mkdir -p $@
-	tar -xvf $< -C $@ --strip-components=1 && touch $@
-
-# dosfstools
-
-DOSFSTOOLS_DOWNLOAD_FILE=dosfstools-4.1.tar.xz
-DOSFSTOOLS_DOWNLOAD_URL=https://github.com/dosfstools/dosfstools/releases/download/v4.1/$(DOSFSTOOLS_DOWNLOAD_FILE)
-
-$(SRC)/$(DOSFSTOOLS_DOWNLOAD_FILE):
-	rm -rf $@ && wget $(DOSFSTOOLS_DOWNLOAD_URL) -O $@
-
-$(SRC)/dosfstools: $(SRC)/$(DOSFSTOOLS_DOWNLOAD_FILE)
 	rm -rf $@ && mkdir -p $@
 	tar -xvf $< -C $@ --strip-components=1 && touch $@
 
@@ -309,34 +296,12 @@ $(BUILD)/install/kbd: $(BUILD)/kbd
 	$(MAKE) -C $(BUILD)/kbd DESTDIR=$@ install && touch $@
 
 ################################################################################
-# dosfstools                                                                   #
-################################################################################
-
-$(BUILD)/dosfstools/Makefile: $(SRC)/dosfstools $(SYSROOT)
-	rm -rf $(@D) && mkdir -p $(@D)
-	cd $(@D) && $(SRC)/dosfstools/configure \
-		--enable-compat-symlinks \
-		--without-udev \
-		--prefix=/usr \
-		--libexecdir=/usr/lib \
-		--mandir=/usr/share/man \
-		--docdir=/usr/share/doc/dosfstools \
-		CFLAGS="--sysroot=$(SYSROOT) $(CFLAGS)"
-
-$(BUILD)/dosfstools: $(BUILD)/dosfstools/Makefile
-	$(MAKE) -C $(BUILD)/dosfstools all && touch $@
-
-$(BUILD)/install/dosfstools: $(BUILD)/dosfstools
-	$(MAKE) -C $(BUILD)/dosfstools DESTDIR=$@ install && touch $@
-
-################################################################################
 # rootfs                                                                       #
 ################################################################################
 
 $(BUILD)/rootfs: $(BUILD)/install/busybox $(BUILD)/install/sinit \
 		$(SYSROOT) $(BUILD)/install/kbd \
-		$(BUILD)/install/dosfstools $(BUILD)/install/linux
-		#$(BUILD)/install/ubase
+		$(BUILD)/install/linux
 	rm -rf $@ && mkdir -p $@
 	# create the basic filesystem layout
 	# please keep these sorted
@@ -420,7 +385,6 @@ $(BUILD)/rootfs: $(BUILD)/install/busybox $(BUILD)/install/sinit \
 	cp $(SYSROOT)/usr/lib/libresolv.so.2 $@/usr/lib
 	cp $(SYSROOT)/usr/lib/libnss_dns.so.2 $@/usr/lib
 	rsync -avrK $(BUILD)/install/linux/ $@/
-	rsync -avr $(BUILD)/install/dosfstools/ $@/
 	rsync -avr $(BUILD)/install/kbd/ $@/
 	rsync -avr $(BUILD)/install/sinit/ $@/
 	#rsync -avr $(BUILD)/install/ubase/ $@/
