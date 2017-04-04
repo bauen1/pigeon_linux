@@ -358,9 +358,9 @@ $(BUILD)/rootfs: $(BUILD)/install/busybox $(BUILD)/install/sinit \
 	cp $(SYSROOT)/usr/lib/libcrypt.so.1 $@/usr/lib
 	cp $(SYSROOT)/usr/lib/libresolv.so.2 $@/usr/lib
 	cp $(SYSROOT)/usr/lib/libnss_dns.so.2 $@/usr/lib
-	rsync -rlpgoDvr $(BUILD)/install/linux/ $@/
-	rsync -rlpgoDvr $(BUILD)/install/kbd/ $@/
-	rsync -rlpgoDvr $(BUILD)/install/sinit/ $@/
+	rsync -rlpgoDvrK $(BUILD)/install/linux/ $@/
+	rsync -rlpgoDvrK $(BUILD)/install/kbd/ $@/
+	rsync -rlpgoDvrK $(BUILD)/install/sinit/ $@/
 	# link the init system
 	ln -sf usr/bin/sinit $@/init
 	ln -sf ../usr/bin/sinit $@/sbin/init
