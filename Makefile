@@ -235,10 +235,6 @@ BUSYBOX_MAKE=$(MAKE) -C $(SRC)/busybox O=$(BUILD)/busybox CFLAGS="$(CFLAGS) -fom
 $(BUILD)/busybox/.config: $(SRC)/busybox $(SYSROOT)
 	mkdir -p $(@D) && rm -rf $(@D)/*
 	$(BUSYBOX_MAKE) defconfig
-	# enable static linking for the time being
-	# cd $(@D) && sed -i 's/.*CONFIG_STATIC.*/CONFIG_STATIC=y/g' .config
-	# dynamic linking rules!
-	##
 	cd $(@D) && sed -i 's/.*CONFIG_SYSROOT.*/CONFIG_SYSROOT="$(SYSROOT_ESCAPED)"/g' .config
 
 $(BUILD)/busybox: $(BUILD)/busybox/.config $(SYSROOT)
@@ -253,7 +249,7 @@ $(BUILD)/install/busybox: $(BUILD)/busybox
 
 $(BUILD)/sinit: $(SRC)/sinit $(SYSROOT)
 	rm -rf $@ && mkdir -p $@
-	rsync -avr $</ $@/
+	rsync -rlpgoDvr $</ $@/
 	$(MAKE) -C $(BUILD)/sinit all CFLAGS="$(CFLAGS) --sysroot=$(SYSROOT)" && touch $@
 
 $(BUILD)/install/sinit: $(BUILD)/sinit
@@ -266,8 +262,12 @@ $(BUILD)/install/sinit: $(BUILD)/sinit
 
 $(BUILD)/kbd/Makefile: $(SRC)/kbd $(SYSROOT)
 	rm -rf $(@D) && mkdir -p $(@D)
-	cd $(@D) && $(SRC)/kbd/configure --prefix=/usr --with-sysroot=$(SYSROOT) \
-		--datadir=/usr/share/kbd --mandir=/usr/share/man
+	cd $(@D) && $(SRC)/kbd/configure
+		--prefix=/usr \
+		--with-sysroot=$(SYSROOT) \
+		--datadir=/usr/share/kbd \
+		--mandir=/usr/share/man && \
+	touch $@
 
 $(BUILD)/kbd: $(BUILD)/kbd/Makefile $(SYSROOT)
 	$(MAKE) -C $(BUILD)/kbd all && touch $@
@@ -284,10 +284,7 @@ $(BUILD)/rootfs: $(BUILD)/install/busybox $(BUILD)/install/sinit \
 		$(SYSROOT) $(BUILD)/install/kbd \
 		$(BUILD)/install/linux
 	rm -rf $@ && mkdir -p $@
-	# create the basic filesystem layout
-	# please keep these sorted
-	#
-	# Create the directory layout
+	# Create the basic filesystem (please keep this sorted)
 	ln -s usr/bin $@/bin
 	install -d -m 0755 $@/boot
 	install -d -m 0755 $@/dev
@@ -344,8 +341,6 @@ $(BUILD)/rootfs: $(BUILD)/install/busybox $(BUILD)/install/sinit \
 	install -d -m 0755 $@/var/spool/cron
 	install -d -m 1777 $@/var/spool/mail
 	install -d -m 1777 $@/var/tmp
-	#
-	#
 	# install the files
 	install -m 0644 $(SRC)/filesystem/etc/fstab $@/etc/fstab
 	install -m 0644 $(SRC)/filesystem/etc/group $@/etc/group
@@ -357,22 +352,19 @@ $(BUILD)/rootfs: $(BUILD)/install/busybox $(BUILD)/install/sinit \
 	install -m 0644 $(SRC)/filesystem/etc/securetty $@/etc/securetty
 	install -m 0600 $(SRC)/filesystem/etc/shadow $@/etc/shadow
 	install -m 0644 $(SRC)/filesystem/etc/shells $@/etc/shells
-	# copy all the files in the sysroot over
-	#rsync -avr $(SYSROOT)/ $@/
 	cp $(SYSROOT)/usr/lib/ld-linux* $@/usr/lib
 	cp $(SYSROOT)/usr/lib/libm.so.6 $@/usr/lib
 	cp $(SYSROOT)/usr/lib/libc.so.6 $@/usr/lib
 	cp $(SYSROOT)/usr/lib/libcrypt.so.1 $@/usr/lib
 	cp $(SYSROOT)/usr/lib/libresolv.so.2 $@/usr/lib
 	cp $(SYSROOT)/usr/lib/libnss_dns.so.2 $@/usr/lib
-	rsync -avrK $(BUILD)/install/linux/ $@/
-	rsync -avr $(BUILD)/install/kbd/ $@/
-	rsync -avr $(BUILD)/install/sinit/ $@/
-	#rsync -avr $(BUILD)/install/ubase/ $@/
+	rsync -rlpgoDvr $(BUILD)/install/linux/ $@/
+	rsync -rlpgoDvr $(BUILD)/install/kbd/ $@/
+	rsync -rlpgoDvr $(BUILD)/install/sinit/ $@/
 	# link the init system
 	ln -sf usr/bin/sinit $@/init
 	ln -sf ../usr/bin/sinit $@/sbin/init
-	rsync -avr --ignore-existing $(BUILD)/install/busybox/ $@/
+	rsync -rlpgoDvr --ignore-existing $(BUILD)/install/busybox/ $@/
 	rm -f $@/linuxrc
 	# update the date on the directory itself
 	touch $@
@@ -407,7 +399,7 @@ $(BUILD)/iso: $(BUILD)/initrd.cpio.gz $(KERNEL) $(SRC)/syslinux \
 	touch $@
 
 $(BUILD)/pigeon_linux_live.iso: $(BUILD)/iso
-	cd $< ; genisoimage \
+	cd $< && genisoimage \
 		-J \
 		-r \
 		-o $@ \
@@ -417,7 +409,7 @@ $(BUILD)/pigeon_linux_live.iso: $(BUILD)/iso
 		-no-emul-boot \
 		-boot-load-size 4 \
 		-boot-info-table \
-		$(BUILD)/iso
+		$<
 
 ################################################################################
 #                                                                              #
