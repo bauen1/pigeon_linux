@@ -355,10 +355,13 @@ $(BUILD)/rootfs: $(BUILD)/install/busybox $(BUILD)/install/sinit \
 	install -m 0644 $(SRC)/filesystem/etc/fstab $@/etc/fstab
 	install -m 0644 $(SRC)/filesystem/etc/group $@/etc/group
 	install -m 0600 $(SRC)/filesystem/etc/gshadow $@/etc/gshadow
+	install -m 0644 $(SRC)/filesystem/etc/hostname $@/etc/hostname
+	install -m 0644 $(SRC)/filesystem/etc/hosts $@/etc/hosts
 	install -m 0644 $(SRC)/filesystem/etc/issue $@/etc/issue
 	install -m 0644 $(SRC)/filesystem/etc/motd $@/etc/motd
 	install -m 0644 $(SRC)/filesystem/etc/os-version $@/etc/os-version
 	install -m 0644 $(SRC)/filesystem/etc/passwd $@/etc/passwd
+	install -m 0644 $(SRC)/filesystem/etc/profile $@/etc/profile
 	install -m 0644 $(SRC)/filesystem/etc/securetty $@/etc/securetty
 	install -m 0600 $(SRC)/filesystem/etc/shadow $@/etc/shadow
 	install -m 0644 $(SRC)/filesystem/etc/shells $@/etc/shells
@@ -366,8 +369,6 @@ $(BUILD)/rootfs: $(BUILD)/install/busybox $(BUILD)/install/sinit \
 	cp $(SYSROOT)/usr/lib/libm.so.6 $@/usr/lib
 	cp $(SYSROOT)/usr/lib/libc.so.6 $@/usr/lib
 	cp $(SYSROOT)/usr/lib/libcrypt.so.1 $@/usr/lib
-	cp $(SYSROOT)/usr/lib/libresolv.so.2 $@/usr/lib
-	cp $(SYSROOT)/usr/lib/libnss_dns.so.2 $@/usr/lib
 	rsync -rlpgoDvrK $(BUILD)/install/linux/ $@/
 	rsync -rlpgoDvrK $(BUILD)/install/kbd/ $@/
 	rsync -rlpgoDvrK $(BUILD)/install/sinit/ $@/
