@@ -157,7 +157,7 @@ $(BUILD)/linux/.config: $(SRC)/linux
 	# disable the boot logo
 	sed -i "s/.*CONFIG_LOGO_LINUX_CLUT224.*/\\# CONFIG_LOGO_LINUX_CLUT224 is not set/" "$@"
 
-# generate the kernel in the compressed self-extracting bzImage format
+# compile the kernel and modules
 $(KERNEL_IMAGE): $(BUILD)/linux/.config
 	@echo "building bzImage"
 	$(LINUX_KERNEL_MAKE) bzImage
