@@ -1,2 +1,5 @@
-export PATH=/usr/bin:/bin:/usr/sbin:/sbin
-export MANPATH=/usr/share/man
+#!/bin/sh
+# profile
+
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
+
