@@ -147,7 +147,8 @@ $(SRC)/kbd: $(SRC)/$(KBD_DOWNLOAD_FILE)
 ################################################################################
 
 LINUX_KERNEL_MAKE=$(MAKE) -C $(SRC)/linux O=$(BUILD)/linux
-KERNEL=$(BUILD)/linux/arch/x86/boot/bzImage
+KERNEL=$(BUILD)/linux
+KERNEL_IMAGE=$(KERNEL)/arch/x86/boot/bzImage
 
 # Generate the default config for the kernel
 $(KERNEL)/.config: $(SRC)/linux
@@ -160,7 +161,7 @@ $(KERNEL)/.config: $(SRC)/linux
 	touch $@
 
 # compile the kernel and modules
-$(KERNEL): $(BUILD)/linux/.config
+$(KERNEL_IMAGE): $(BUILD)/linux/.config
 	$(LINUX_KERNEL_MAKE) bzImage
 	$(LINUX_KERNEL_MAKE) modules
 
@@ -438,11 +439,11 @@ $(BUILD)/initrd.cpio.gz: $(BUILD)/initramfs
 # live iso generation                                                          #
 ################################################################################
 
-$(BUILD)/iso: $(BUILD)/initrd.cpio.gz $(KERNEL) $(SRC)/syslinux \
+$(BUILD)/iso: $(BUILD)/initrd.cpio.gz $(KERNEL_IMAGE) $(SRC)/syslinux \
 		$(SRC)/syslinux.cfg
 	rm -rf $@ && mkdir -p $@
 	cp $(BUILD)/initrd.cpio.gz $@/initrd.cpio.gz
-	cp $(KERNEL) $@/kernel
+	cp $(KERNEL_IMAGE) $@/kernel
 	cp $(SRC)/syslinux/bios/core/isolinux.bin $@/isolinux.bin
 	cp $(SRC)/syslinux/bios/com32/elflink/ldlinux/ldlinux.c32 $@/ldlinux.c32
 	mkdir -p $@/efi/boot # TODO: UEFI support
