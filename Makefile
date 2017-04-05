@@ -150,7 +150,7 @@ LINUX_KERNEL_MAKE=$(MAKE) -C $(SRC)/linux O=$(BUILD)/linux
 KERNEL=$(BUILD)/linux/arch/x86/boot/bzImage
 
 # Generate the default config for the kernel
-$(BUILD)/linux/.config: $(SRC)/linux
+$(KERNEL)/.config: $(SRC)/linux
 	rm -rf $(@D) && mkdir -p $(@D) # FORCE a rebuild of everything depending on this in any way
 	$(LINUX_KERNEL_MAKE) defconfig
 	# Enable VESA framebuffer support
@@ -164,35 +164,37 @@ $(KERNEL): $(BUILD)/linux/.config
 	$(LINUX_KERNEL_MAKE) bzImage
 	$(LINUX_KERNEL_MAKE) modules
 
+KERNEL_INSTALL=$(BUILD)/install/linux
+
 # install the kernel headers
-$(BUILD)/install/linux/usr/include: $(KERNEL) # FIXME: $(BUILD)/linux/.config should be enough
-	rm -rf $@ && mkdir -p $@
+$(KERNEL_INSTALL)/usr/include: $(KERNEL)/.config
+	mkdir -p $@
 	$(LINUX_KERNEL_MAKE) INSTALL_HDR_PATH=$(@D) headers_install
+	touch $@
 
 # install all the kernel modules
-$(BUILD)/install/linux/usr/lib/modules: $(KERNEL)
-	rm -rf $@ && mkdir -p $@
+$(KERNEL_INSTALL)/usr/lib/modules: $(KERNEL)
+	mkdir -p $@
 	$(LINUX_KERNEL_MAKE) INSTALL_MOD_PATH=$(BUILD)/install/linux/usr \
 		modules_install
-	sleep 3 && touch $@
+	touch $@
 
 # install all the kernel firmware
-$(BUILD)/install/linux/usr/lib/firmware: $(KERNEL) # FIXME: $(BUILD)/linux/.config should be enough
-	rm -rf $@ && mkdir -p $@
+$(KERNEL_INSTALL)/usr/lib/firmware: $(KERNEL)/.config
+	mkdir -p $@
 	$(LINUX_KERNEL_MAKE) INSTALL_FW_PATH=$(BUILD)/install/linux/usr/lib/firmware \
 		firmware_install
-	sleep 3 && touch $@
+	touch $@
 
-$(BUILD)/install/linux/usr/lib: $(BUILD)/install/linux/usr/lib/modules \
+$(KERNEL_INSTALL)/usr/lib: $(BUILD)/install/linux/usr/lib/modules \
 		$(BUILD)/install/linux/usr/lib/firmware
-	sleep 3 && touch $@
+	touch $@
 
-$(BUILD)/install/linux/usr: $(BUILD)/install/linux/usr/include \
+$(KERNEL_INSTALL)/usr: $(BUILD)/install/linux/usr/include \
 		$(BUILD)/install/linux/usr/lib
-	sleep 3 && touch $@
+	touch $@
 
-$(BUILD)/install/linux: $(BUILD)/install/linux/usr
-	sleep 3 && touch $@
+$(KERNEL_INSTALL): $(BUILD)/install/linux/usr
 
 ################################################################################
 # glibc                                                                        #
