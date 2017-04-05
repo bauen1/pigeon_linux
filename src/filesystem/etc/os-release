@@ -1,0 +1,16 @@
+NAME="pigeon"
+VERSION="0.0.1 (alpha)"
+ID=linux
+ID_LIKE=linux
+VERSION_CODENAME="alpha"
+VERSION_ID="0.0.1"
+PRETTY_NAME="Pigeon Linux 0.0.1 (alpha)"
+ANSI_COLOR="1;37"
+#CPE_NAME=""
+HOME_URL="https://github.com/bauen1/pigeon_linux"
+#SUPPORT_URL=""
+BUG_REPORT_URL="https://github.com/bauen1/pigeon_linux/issues"
+#PRIVACY_POLICY_URL=""
+#BUILD_ID=""
+#VARIANT=""
+#VARIANT_ID=""
