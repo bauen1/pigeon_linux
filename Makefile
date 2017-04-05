@@ -161,7 +161,9 @@ $(BUILD)/linux/.config: $(SRC)/linux
 
 # compile the kernel and modules
 $(KERNEL): $(BUILD)/linux/.config
+	@echo "building bzImage"
 	$(LINUX_KERNEL_MAKE) bzImage
+	@echo "building modules"
 	$(LINUX_KERNEL_MAKE) modules
 
 # install the kernel headers
@@ -382,8 +384,6 @@ $(BUILD)/rootfs: $(BUILD)/install/busybox $(BUILD)/install/sinit \
 	cp $(SYSROOT)/usr/lib/libm.so.6 $@/usr/lib
 	cp $(SYSROOT)/usr/lib/libc.so.6 $@/usr/lib
 	cp $(SYSROOT)/usr/lib/libcrypt.so.1 $@/usr/lib
-	cp $(SYSROOT)/usr/lib/libresolv.so.2 $@/usr/lib
-	cp $(SYSROOT)/usr/lib/libnss_dns.so.2 $@/usr/lib
 	rsync -rlpgoDvrK $(BUILD)/install/linux/ $@/
 	rsync -rlpgoDvrK $(BUILD)/install/kbd/ $@/
 	rsync -rlpgoDvrK $(BUILD)/install/sinit/ $@/

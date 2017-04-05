@@ -1,5 +1,5 @@
 #!/bin/sh
 # profile
 
-PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
 
