@@ -148,16 +148,16 @@ $(SRC)/kbd: $(SRC)/$(KBD_DOWNLOAD_FILE)
 
 LINUX_KERNEL_MAKE=$(MAKE) -C $(SRC)/linux O=$(BUILD)/linux
 KERNEL=$(BUILD)/linux/arch/x86/boot/bzImage
+KERNEL_IMAGE=$(BUILD)/linux/arch/x86/boot/bzImage
 
 # Generate the default config for the kernel
 $(BUILD)/linux/.config: $(SRC)/linux
 	rm -rf $(@D) && mkdir -p $(@D) # FORCE a rebuild of everything depending on this in any way
 	$(LINUX_KERNEL_MAKE) defconfig
 	# Enable VESA framebuffer support
-	cd $(@D) && sed -i "s/.*CONFIG_FB_VESA.*/CONFIG_FB_VESA=y/" .config
+	sed -i "s/.*CONFIG_FB_VESA.*/CONFIG_FB_VESA=y/" "$@"
 	# disable the boot logo
-	cd $(@D) && sed -i "s/.*CONFIG_LOGO_LINUX_CLUT224.*/\\# CONFIG_LOGO_LINUX_CLUT224 is not set/" .config
-	touch $@
+	sed -i "s/.*CONFIG_LOGO_LINUX_CLUT224.*/\\# CONFIG_LOGO_LINUX_CLUT224 is not set/" "$@"
 
 # compile the kernel and modules
 $(KERNEL): $(BUILD)/linux/.config
@@ -436,7 +436,7 @@ $(BUILD)/initrd.cpio.gz: $(BUILD)/initramfs
 # live iso generation                                                          #
 ################################################################################
 
-$(BUILD)/iso: $(BUILD)/initrd.cpio.gz $(KERNEL) $(SRC)/syslinux \
+$(BUILD)/iso: $(KERNEL_IMAGE) $(BUILD)/initrd.cpio.gz $(SRC)/syslinux \
 		$(SRC)/syslinux.cfg
 	rm -rf $@ && mkdir -p $@
 	cp $(BUILD)/initrd.cpio.gz $@/initrd.cpio.gz
