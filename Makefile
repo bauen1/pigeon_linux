@@ -64,7 +64,8 @@ qemu: $(BUILD)/pigeon_linux_live.iso
 
 # linux kernel
 
-LINUX_KERNEL_DOWNLOAD_FILE=linux-4.9.13.tar.xz
+LINUX_KERNEL_VERSION=4.9.13
+LINUX_KERNEL_DOWNLOAD_FILE=linux-$(LINUX_KERNEL_VERSION).tar.xz
 LINUX_KERNEL_DOWNLOAD_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/$(LINUX_KERNEL_DOWNLOAD_FILE)
 
 $(SRC)/$(LINUX_KERNEL_DOWNLOAD_FILE):
@@ -76,7 +77,8 @@ $(SRC)/linux: $(SRC)/$(LINUX_KERNEL_DOWNLOAD_FILE)
 
 # glibc
 
-GLIBC_DOWNLOAD_FILE=glibc-2.25.tar.xz
+GLIBC_VERSION=2.25
+GLIBC_DOWNLOAD_FILE=glibc-$(GLIBC_VERSION).tar.xz
 GLIBC_DOWNLOAD_URL=https://ftp.gnu.org/gnu/libc/$(GLIBC_DOWNLOAD_FILE)
 
 $(SRC)/$(GLIBC_DOWNLOAD_FILE):
@@ -88,7 +90,8 @@ $(SRC)/glibc: $(SRC)/$(GLIBC_DOWNLOAD_FILE)
 
 # busybox
 
-BUSYBOX_DOWNLOAD_FILE=busybox-1.26.2.tar.bz2
+BUSYBOX_VERSION=1.26.2
+BUSYBOX_DOWNLOAD_FILE=busybox-$(BUSYBOX_VERSION).tar.bz2
 BUSYBOX_DOWNLOAD_URL=http://busybox.net/downloads/$(BUSYBOX_DOWNLOAD_FILE)
 
 $(SRC)/$(BUSYBOX_DOWNLOAD_FILE):
@@ -100,7 +103,8 @@ $(SRC)/busybox: $(SRC)/$(BUSYBOX_DOWNLOAD_FILE)
 
 # syslinux
 
-SYSLINUX_DOWNLOAD_FILE=syslinux-6.03.tar.xz
+SYSLINUX_VERSION=6.03
+SYSLINUX_DOWNLOAD_FILE=syslinux-$(SYSLINUX_VERSION).tar.xz
 SYSLINUX_DOWNLOAD_URL=http://kernel.org/pub/linux/utils/boot/syslinux/$(SYSLINUX_DOWNLOAD_FILE)
 
 $(SRC)/$(SYSLINUX_DOWNLOAD_FILE):
@@ -112,7 +116,8 @@ $(SRC)/syslinux: $(SRC)/$(SYSLINUX_DOWNLOAD_FILE)
 
 # sinit (suckless init MIT license)
 
-SINIT_DOWNLOAD_FILE=sinit-1.0.tar.bz2
+SINIT_VERSION=1.0
+SINIT_DOWNLOAD_FILE=sinit-$(SINIT_VERSION).tar.bz2
 SINIT_DOWNLOAD_URL=http://git.suckless.org/sinit/snapshot/$(SINIT_DOWNLOAD_FILE)
 
 $(SRC)/$(SINIT_DOWNLOAD_FILE):
@@ -123,7 +128,9 @@ $(SRC)/sinit: $(SRC)/$(SINIT_DOWNLOAD_FILE)
 	tar -xvf $< -C $@ --strip-components=1 && touch $@
 
 # kbd (linux keyboard tools)
-KBD_DOWNLOAD_FILE=kbd-2.0.4.tar.xz
+
+KBD_VERSION=2.0.4
+KBD_DOWNLOAD_FILE=kbd-$(KBD_VERSION).tar.xz
 KBD_DOWNLOAD_URL=https://www.kernel.org/pub/linux/utils/kbd/$(KBD_DOWNLOAD_FILE)
 
 $(SRC)/$(KBD_DOWNLOAD_FILE):
@@ -139,24 +146,27 @@ $(SRC)/kbd: $(SRC)/$(KBD_DOWNLOAD_FILE)
 
 LINUX_KERNEL_MAKE=$(MAKE) -C $(SRC)/linux O=$(BUILD)/linux
 KERNEL=$(BUILD)/linux/arch/x86/boot/bzImage
+KERNEL_IMAGE=$(BUILD)/linux/arch/x86/boot/bzImage
 
 # Generate the default config for the kernel
 $(BUILD)/linux/.config: $(SRC)/linux
 	rm -rf $(@D) && mkdir -p $(@D)
 	$(LINUX_KERNEL_MAKE) defconfig
 	# Enable VESA framebuffer support
-	cd $(@D) && sed -i "s/.*CONFIG_FB_VESA.*/CONFIG_FB_VESA=y/" .config
+	sed -i "s/.*CONFIG_FB_VESA.*/CONFIG_FB_VESA=y/" "$@"
 	# disable the boot logo
-	cd $(@D) && sed -i "s/.*CONFIG_LOGO_LINUX_CLUT224.*/\\# CONFIG_LOGO_LINUX_CLUT224 is not set/" .config
-	touch $@
+	sed -i "s/.*CONFIG_LOGO_LINUX_CLUT224.*/\\# CONFIG_LOGO_LINUX_CLUT224 is not set/" "$@"
 
 # generate the kernel in the compressed self-extracting bzImage format
-$(KERNEL): $(BUILD)/linux/.config
+$(KERNEL_IMAGE): $(BUILD)/linux/.config
+	@echo "building bzImage"
 	$(LINUX_KERNEL_MAKE) bzImage
+	@echo "building modules"
+	$(LINUX_KERNEL_MAKE) modules
 
 # install the kernel headers
 $(BUILD)/install/linux/usr/include: $(BUILD)/linux/.config
-	mkdir -p $(@D) && rm -rf $(@D)/*
+	rm -rf $@ && mkdir -p $@
 	$(LINUX_KERNEL_MAKE)  INSTALL_HDR_PATH=$(@D) headers_install
 	touch $@
 
@@ -387,7 +397,7 @@ $(BUILD)/initrd.cpio.gz: $(BUILD)/initramfs
 # live iso generation                                                          #
 ################################################################################
 
-$(BUILD)/iso: $(BUILD)/initrd.cpio.gz $(KERNEL) $(SRC)/syslinux \
+$(BUILD)/iso: $(KERNEL_IMAGE) $(BUILD)/initrd.cpio.gz $(SRC)/syslinux \
 		$(SRC)/syslinux.cfg
 	rm -rf $@ && mkdir -p $@
 	cp $(BUILD)/initrd.cpio.gz $@/initrd.cpio.gz
