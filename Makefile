@@ -156,6 +156,10 @@ $(BUILD)/linux/.config: $(SRC)/linux
 	sed -i "s/.*CONFIG_FB_VESA.*/CONFIG_FB_VESA=y/" "$@"
 	# disable the boot logo
 	sed -i "s/.*CONFIG_LOGO_LINUX_CLUT224.*/\\# CONFIG_LOGO_LINUX_CLUT224 is not set/" "$@"
+	# enable the efi stub
+	sed -i "s/.*CONFIG_EFI_STUB.*/CONFIG_EFI_STUB=y/" $@
+	# enable it for 64 bit too
+	echo "CONFIG_EFI_MIXED=y" >> $@
 
 # compile the kernel and modules
 $(KERNEL_IMAGE): $(BUILD)/linux/.config
@@ -227,8 +231,8 @@ $(SYSROOT): $(BUILD)/install/linux $(BUILD)/install/glibc
 	ln -s usr/lib $@/lib64
 	mkdir -p $@/usr
 	ln -s lib $@/usr/lib64
-	rsync -avrK $(BUILD)/install/glibc/ $@/
-	rsync -avrK $(BUILD)/install/linux/ $@/
+	rsync -rlpgoDvrK $(BUILD)/install/glibc/ $@/
+	rsync -rlpgoDvrK $(BUILD)/install/linux/ $@/
 	touch $@
 
 ################################################################################
@@ -259,7 +263,7 @@ $(BUILD)/install/busybox: $(BUILD)/busybox
 
 $(BUILD)/sinit: $(SRC)/sinit $(SYSROOT)
 	rm -rf $@ && mkdir -p $@
-	rsync -rlpgoDvr $</ $@/
+	rsync -rlpgoDvrK $<& $@/
 	$(MAKE) -C $(BUILD)/sinit all CFLAGS="$(CFLAGS) --sysroot=$(SYSROOT)" && touch $@
 
 $(BUILD)/install/sinit: $(BUILD)/sinit
@@ -405,7 +409,10 @@ $(BUILD)/iso: $(KERNEL_IMAGE) $(BUILD)/initrd.cpio.gz $(SRC)/syslinux \
 	cp $(KERNEL) $@/kernel
 	cp $(SRC)/syslinux/bios/core/isolinux.bin $@/isolinux.bin
 	cp $(SRC)/syslinux/bios/com32/elflink/ldlinux/ldlinux.c32 $@/ldlinux.c32
-	mkdir -p $@/efi/boot # TODO: UEFI support
+	mkdir -p $@/efi/boot
+	echo "echo -off" > $@/efi/boot/startup.nsh
+	echo "Starting pigeon linux" >> $@/efi/boot/startup.nsh
+	echo "\\\\kernel initrd=\\\\initrd.cpio.gz" >> $@/efi/boot/startup.nsh
 	cp $(SRC)/syslinux.cfg $@/
 	touch $@
 
