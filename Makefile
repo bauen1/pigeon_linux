@@ -67,7 +67,8 @@ qemu: $(BUILD)/pigeon_linux_live.iso
 # linux kernel
 
 LINUX_KERNEL_VERSION=4.9.20
-LINUX_KERNEL_DOWNLOAD_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-$(LINUX_KERNEL_VERSION).tar.xz
+LINUX_KERNEL_DOWNLOAD_FILE=linux-$(LINUX_KERNEL_VERSION).tar.xz
+LINUX_KERNEL_DOWNLOAD_URL=https://cdn.kernel.org/pub/linux/kernel/v4.x/$(LINUX_KERNEL_DOWNLOAD_FILE)
 
 $(SRC)/$(LINUX_KERNEL_DOWNLOAD_FILE):
 	rm -rf $@ && wget $(LINUX_KERNEL_DOWNLOAD_URL) -O $@
@@ -79,7 +80,8 @@ $(SRC)/linux: $(SRC)/$(LINUX_KERNEL_DOWNLOAD_FILE)
 # glibc
 
 GLIBC_VERSION=2.25
-GLIBC_DOWNLOAD_URL=https://ftp.gnu.org/gnu/libc/glibc-$(GLIBC_VERSION).tar.xz
+GLIBC_DOWNLOAD_FILE=glibc-$(GLIBC_VERSION).tar.xz
+GLIBC_DOWNLOAD_URL=https://ftp.gnu.org/gnu/libc/$(GLIBC_DOWNLOAD_FILE)
 
 $(SRC)/$(GLIBC_DOWNLOAD_FILE):
 	rm -rf $@ && wget $(GLIBC_DOWNLOAD_URL) -O $@
@@ -91,7 +93,8 @@ $(SRC)/glibc: $(SRC)/$(GLIBC_DOWNLOAD_FILE)
 # busybox
 
 BUSYBOX_VERSION=1.26.2
-BUSYBOX_DOWNLOAD_URL=https://busybox.net/downloads/busybox-$(BUSYBOX_VERSION).tar.bz2
+BUSYBOX_DOWNLOAD_FILE=busybox-$(BUSYBOX_VERSION).tar.bz2
+BUSYBOX_DOWNLOAD_URL=https://busybox.net/downloads/$(BUSYBOX_DOWNLOAD_FILE)
 
 $(SRC)/$(BUSYBOX_DOWNLOAD_FILE):
 	rm -rf $@ && wget $(BUSYBOX_DOWNLOAD_URL) -O $@
@@ -103,7 +106,8 @@ $(SRC)/busybox: $(SRC)/$(BUSYBOX_DOWNLOAD_FILE)
 # syslinux
 
 SYSLINUX_VERSION=6.03
-SYSLINUX_DOWNLOAD_URL=https://cdn.kernel.org/pub/linux/utils/boot/syslinux/syslinux-$(SYSLINUX_VERSION).tar.xz
+SYSLINUX_DOWNLOAD_FILE=syslinux-$(SYSLINUX_VERSION).tar.xz
+SYSLINUX_DOWNLOAD_URL=https://cdn.kernel.org/pub/linux/utils/boot/syslinux/$(SYSLINUX_DOWNLOAD_FILE)
 
 $(SRC)/$(SYSLINUX_DOWNLOAD_FILE):
 	rm -rf $@ && wget $(SYSLINUX_DOWNLOAD_URL) -O $@
@@ -115,7 +119,8 @@ $(SRC)/syslinux: $(SRC)/$(SYSLINUX_DOWNLOAD_FILE)
 # sinit (suckless init MIT license)
 
 SINIT_VERSION=1.0
-SINIT_DOWNLOAD_URL=http://git.suckless.org/sinit/snapshot/sinit-$(SINIT_DOWNLOAD_FILE).tar.bz2
+SINIT_DOWNLOAD_FILE=sinit-$(SINIT_VERSION).tar.bz2
+SINIT_DOWNLOAD_URL=http://git.suckless.org/sinit/snapshot/$(SINIT_DOWNLOAD_FILE)
 # FIXME: insecure http used
 
 $(SRC)/$(SINIT_DOWNLOAD_FILE):
@@ -128,7 +133,8 @@ $(SRC)/sinit: $(SRC)/$(SINIT_DOWNLOAD_FILE)
 # kbd (linux keyboard tools)
 
 KBD_VERSION=2.0.4
-KBD_DOWNLOAD_URL=https://cdn.kernel.org/pub/linux/utils/kbd/kbd-$(KBD_VERSION).tar.xz
+KBD_DOWNLOAD_FILE=kbd-$(KBD_VERSION).tar.xz
+KBD_DOWNLOAD_URL=https://cdn.kernel.org/pub/linux/utils/kbd/$(KBD_DOWNLOAD_FILE)
 
 $(SRC)/$(KBD_DOWNLOAD_FILE):
 	rm -rf $@ && wget $(KBD_DOWNLOAD_URL) -O $@
