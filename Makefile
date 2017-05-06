@@ -55,12 +55,14 @@ clean_src:
 
 .POHNY: qemu
 qemu: $(BUILD)/pigeon_linux_live.iso
-	# if you get a "write error no space left error" throw more ram at it
+	# if you get a "write error no space left error", throw more ram at it
 	qemu-system-x86_64 -m 64M -cdrom $< -boot d -vga std
 
 ################################################################################
 # Source downloading                                                           #
 ################################################################################
+
+# TODO: signature and hash checking
 
 # linux kernel
 
@@ -373,7 +375,6 @@ $(BUILD)/rootfs: $(BUILD)/install/busybox $(BUILD)/install/sinit \
 	cp $(SYSROOT)/usr/lib/ld-linux* $@/usr/lib
 	cp $(SYSROOT)/usr/lib/libm.so.6 $@/usr/lib
 	cp $(SYSROOT)/usr/lib/libc.so.6 $@/usr/lib
-	cp $(SYSROOT)/usr/lib/libcrypt.so.1 $@/usr/lib
 	rsync -rlpgoDvrK $(BUILD)/install/linux/ $@/
 	rsync -rlpgoDvrK $(BUILD)/install/kbd/ $@/
 	rsync -rlpgoDvrK $(BUILD)/install/sinit/ $@/
